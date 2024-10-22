@@ -107,6 +107,8 @@ pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> 
             return persist_tasks(config.todo_file(), tasks);
         }
 
+        // We should probably extract those in a function and just pass the lambda to it if
+        // possible
         if !query.projects.is_empty() {
             tasks.iter_mut().for_each(|item| {
                 if item
@@ -148,11 +150,59 @@ pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> 
 }
 
 pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskError> {
-    // let mut tasks = read_tasks_from_file(&config)?;
-    //
-    // let query = params.query.join(" ");
+    let tasks = read_tasks_from_file(&config)?;
 
-    Ok(())
+    let query = params.query.join(" ");
+
+    if let Ok(query) = query.parse::<TaskQuery>() {
+        if !query.indexes.is_empty() {
+            let remaning_tasks = tasks
+                .into_iter()
+                .filter(|item| !query.indexes.contains(&item.idx))
+                .collect();
+
+            return persist_tasks(config.todo_file(), remaning_tasks);
+        }
+
+        let mut remaning_tasks = TaskList::new();
+
+        if !query.projects.is_empty() {
+            remaning_tasks = tasks
+                .into_iter()
+                .filter(|item| {
+                    !item
+                        .task
+                        .projects
+                        .iter()
+                        .any(|pro| query.projects.contains(pro))
+                })
+                .collect();
+        }
+
+        if !query.contexts.is_empty() {
+            remaning_tasks = remaning_tasks
+                .into_iter()
+                .filter(|item| {
+                    !item
+                        .task
+                        .contexts
+                        .iter()
+                        .any(|ctx| query.contexts.contains(ctx))
+                })
+                .collect();
+        }
+
+        if let Some(due_date) = query.due_date {
+            remaning_tasks = remaning_tasks
+                .into_iter()
+                .filter(|item| !item.task.due_date.is_some_and(|dd| dd == due_date))
+                .collect();
+        }
+
+        persist_tasks(config.todo_file(), remaning_tasks)
+    } else {
+        Err(TaskError::FailedToParseQuery)
+    }
 }
 
 fn print_tasks_list(tasks: TaskList) {
@@ -183,6 +233,9 @@ fn read_tasks_from_file(config: &Config) -> Result<TaskList, TaskError> {
     Ok(tasks)
 }
 
+// TODO: move this function in it's own module
+// TODO: create a storage struct that would contain the dir path / file path instead of passing
+// config around
 fn persist_tasks(file: PathBuf, tasks: TaskList) -> Result<(), TaskError> {
     let mut file = if let Ok(file) = OpenOptions::new()
         .create(true)
