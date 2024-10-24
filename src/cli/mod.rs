@@ -3,6 +3,7 @@ mod handlers;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use handlers::handle_edit;
 
 use crate::config::Config;
 
@@ -29,7 +30,7 @@ impl Cli {
             Commands::Done(params) => handle_done(config, params),
             Commands::List(params) => handle_list(config, params),
             Commands::Remove(params) => handle_remove(config, params),
-            Commands::Edit => unimplemented!(),
+            Commands::Edit(params) => handle_edit(config, params),
             Commands::Due => unimplemented!(),
             Commands::Undone => unimplemented!(),
             Commands::Clean => unimplemented!(),
@@ -47,7 +48,7 @@ enum Commands {
     Done(DoneParams),
     List(ListParams),
     Remove(RemoveParams),
-    Edit,
+    Edit(EditParams),
     Due,
     Undone,
     Clean,
@@ -100,4 +101,10 @@ struct DoneParams {
 )]
 struct RemoveParams {
     query: Vec<String>,
+}
+
+#[derive(Parser)]
+#[command(name = "edit", about = "Edit the todo file with a text editor")]
+struct EditParams {
+    item: Option<u32>,
 }
