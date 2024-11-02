@@ -34,6 +34,7 @@ impl Cli {
             Commands::Due => unimplemented!(),
             Commands::Undone(params) => handle_undone(config, params),
             Commands::Clean => handle_clean(config),
+            Commands::Modify => unimplemented!(),
         };
 
         if let Err(e) = result {
@@ -52,6 +53,7 @@ enum Commands {
     Due,
     Undone(UndoneParams),
     Clean,
+    Modify,
 }
 
 #[derive(Parser)]
