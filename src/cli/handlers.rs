@@ -228,6 +228,14 @@ pub fn handle_edit(config: Config, params: EditParams) -> Result<(), TaskError> 
     Ok(())
 }
 
+pub fn handle_clean(config: Config) -> Result<(), TaskError> {
+    let mut tasks = read_tasks_from_file(&config)?;
+
+    tasks.retain(|i| !i.task.completed);
+
+    persist_tasks(config.todo_file(), tasks)
+}
+
 fn print_tasks_list(tasks: TaskList) {
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item

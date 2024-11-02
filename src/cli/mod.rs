@@ -2,12 +2,12 @@ mod handlers;
 
 use std::path::PathBuf;
 
+use crate::cli::handlers::{
+    handle_add, handle_clean, handle_done, handle_edit, handle_list, handle_remove,
+};
 use clap::{Parser, Subcommand};
-use handlers::handle_edit;
 
 use crate::config::Config;
-
-use self::handlers::{handle_add, handle_done, handle_list, handle_remove};
 
 #[derive(Parser)]
 #[command(
@@ -33,7 +33,7 @@ impl Cli {
             Commands::Edit(params) => handle_edit(config, params),
             Commands::Due => unimplemented!(),
             Commands::Undone => unimplemented!(),
-            Commands::Clean => unimplemented!(),
+            Commands::Clean => handle_clean(config),
         };
 
         if let Err(e) = result {
