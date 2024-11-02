@@ -159,14 +159,14 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_list_query_parse_subject() {
+    fn it_parse_subject() {
         let query = "test test".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "test test")
     }
 
     #[test]
-    fn test_list_query_parse_project() {
+    fn it_parse_project() {
         let query = "+test test something".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "test something");
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn test_list_query_parse_context() {
+    fn it_parse_context() {
         let query = "test @home".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "test");
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_list_query_parse_due_date() {
+    fn it_parse_due_date() {
         let query = "test due:2024-08-01".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "test");
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn test_list_query_parse_tags() {
+    fn it_parse_tags() {
         let query = "test team:sre".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "test");
@@ -204,21 +204,21 @@ mod tests {
     }
 
     #[test]
-    fn test_list_query_parse_index() {
+    fn it_parse_index() {
         let query = "1".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.indexes, vec![1]);
     }
 
     #[test]
-    fn test_list_query_parse_long_index() {
+    fn it_parse_long_index() {
         let query = "109234".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.indexes, vec![109234]);
     }
 
     #[test]
-    fn test_list_query_parse_index_enumeration() {
+    fn it_parse_index_enumeration() {
         // TODO: add fuzzing for those parsers
         let query = "1,12".parse::<TaskQuery>().unwrap();
 
@@ -226,14 +226,14 @@ mod tests {
     }
 
     #[test]
-    fn test_list_query_parse_index_range() {
+    fn it_parse_index_range() {
         let query = "2-5".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.indexes, vec![2, 3, 4, 5]);
     }
 
     #[test]
-    fn test_list_query_parse_index_enumeration_and_range() {
+    fn it_parse_index_enumeration_and_range() {
         let query = "2-5, 9".parse::<TaskQuery>().unwrap();
 
         assert_eq!(query.subject, "");
