@@ -215,6 +215,13 @@ impl Task {
         self.completed_at = Some(Local::now().date_naive());
         self.priority = None;
     }
+
+    pub fn undo(&mut self) {
+        self.completed = false;
+        self.completed_at = None;
+        // FIXME: if there's a priority, keep it in the description like `pri:value` so we can
+        // bring it back
+    }
 }
 
 #[cfg(test)]

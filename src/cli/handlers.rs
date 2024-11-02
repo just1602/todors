@@ -8,7 +8,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskList, task::Task},
 };
 
-use super::{AddParams, DoneParams, EditParams, ListParams, RemoveParams};
+use super::{AddParams, DoneParams, EditParams, ListParams, RemoveParams, UndoneParams};
 
 pub fn handle_add(config: Config, params: AddParams) -> Result<(), TaskError> {
     let task = params.task.join(" ");
@@ -223,6 +223,62 @@ pub fn handle_clean(config: Config) -> Result<(), TaskError> {
     tasks.retain(|i| !i.task.completed);
 
     persist_tasks(config.todo_file(), tasks)
+}
+
+pub fn handle_undone(config: Config, params: UndoneParams) -> Result<(), TaskError> {
+    let mut tasks = read_tasks_from_file(&config)?;
+
+    let query = params.query.join(" ");
+
+    if let Ok(query) = query.parse::<TaskQuery>() {
+        if !query.indexes.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if query.indexes.contains(&item.idx) {
+                    item.task.undo()
+                }
+            });
+
+            return persist_tasks(config.todo_file(), tasks);
+        }
+
+        if !query.projects.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if item
+                    .task
+                    .projects
+                    .iter()
+                    .any(|pro| query.projects.contains(pro))
+                {
+                    item.task.undo()
+                }
+            })
+        }
+
+        if !query.contexts.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if item
+                    .task
+                    .contexts
+                    .iter()
+                    .any(|ctx| query.contexts.contains(ctx))
+                {
+                    item.task.undo()
+                }
+            })
+        }
+
+        if let Some(due_date) = query.due_date {
+            tasks.iter_mut().for_each(|item| {
+                if item.task.due_date.is_some_and(|dd| dd == due_date) {
+                    item.task.undo();
+                }
+            });
+        }
+
+        persist_tasks(config.todo_file(), tasks)
+    } else {
+        Err(TaskError::FailedToParseQuery)
+    }
 }
 
 fn print_tasks_list(tasks: TaskList) {
