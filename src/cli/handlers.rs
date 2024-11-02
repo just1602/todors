@@ -150,7 +150,7 @@ pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> 
 }
 
 pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskError> {
-    let tasks = read_tasks_from_file(&config)?;
+    let mut tasks = read_tasks_from_file(&config)?;
 
     let query = params.query.join(" ");
 
@@ -164,42 +164,31 @@ pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskErr
             return persist_tasks(config.todo_file(), remaning_tasks);
         }
 
-        let mut remaning_tasks = TaskList::new();
-
         if !query.projects.is_empty() {
-            remaning_tasks = tasks
-                .into_iter()
-                .filter(|item| {
-                    !item
-                        .task
-                        .projects
-                        .iter()
-                        .any(|pro| query.projects.contains(pro))
-                })
-                .collect();
+            tasks.retain(|item| {
+                !item
+                    .task
+                    .projects
+                    .iter()
+                    .any(|pro| !query.projects.contains(pro))
+            })
         }
 
         if !query.contexts.is_empty() {
-            remaning_tasks = remaning_tasks
-                .into_iter()
-                .filter(|item| {
-                    !item
-                        .task
-                        .contexts
-                        .iter()
-                        .any(|ctx| query.contexts.contains(ctx))
-                })
-                .collect();
+            tasks.retain(|item| {
+                !item
+                    .task
+                    .contexts
+                    .iter()
+                    .any(|ctx| !query.contexts.contains(ctx))
+            });
         }
 
         if let Some(due_date) = query.due_date {
-            remaning_tasks = remaning_tasks
-                .into_iter()
-                .filter(|item| !item.task.due_date.is_some_and(|dd| dd == due_date))
-                .collect();
+            tasks.retain(|item| !item.task.due_date.is_some_and(|dd| dd == due_date));
         }
 
-        persist_tasks(config.todo_file(), remaning_tasks)
+        persist_tasks(config.todo_file(), tasks)
     } else {
         Err(TaskError::FailedToParseQuery)
     }
