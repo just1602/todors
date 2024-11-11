@@ -8,7 +8,9 @@ use crate::{
     tasks::{error::TaskError, list::TaskList, task::Task},
 };
 
-use super::{AddParams, DoneParams, EditParams, ListParams, RemoveParams, UndoneParams};
+use super::{
+    AddParams, DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams,
+};
 
 pub fn handle_add(config: Config, params: AddParams) -> Result<(), TaskError> {
     let task = params.task.join(" ");
@@ -294,6 +296,62 @@ pub fn handle_due(config: Config) -> Result<(), TaskError> {
     print_tasks_list(tasks);
 
     Ok(())
+}
+
+pub fn handle_modify(config: Config, params: ModifyParams) -> Result<(), TaskError> {
+    let mut tasks = read_tasks_from_file(&config)?;
+
+    let query = params.query.join(" ");
+
+    if let Ok(query) = query.parse::<TaskQuery>() {
+        if !query.indexes.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if query.indexes.contains(&item.idx) {
+                    // TODO: for now we only handle priority, but we should have a function that
+                    // update the all the possible attribute to update for a task
+                    item.task.priority = params.priority;
+                }
+            });
+        }
+
+        if !query.projects.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if item
+                    .task
+                    .projects
+                    .iter()
+                    .any(|pro| query.projects.contains(pro))
+                {
+                    item.task.priority = params.priority;
+                }
+            })
+        }
+
+        if !query.contexts.is_empty() {
+            tasks.iter_mut().for_each(|item| {
+                if item
+                    .task
+                    .contexts
+                    .iter()
+                    .any(|ctx| query.contexts.contains(ctx))
+                {
+                    item.task.priority = params.priority;
+                }
+            })
+        }
+
+        if let Some(due_date) = query.due_date {
+            tasks.iter_mut().for_each(|item| {
+                if item.task.due_date.is_some_and(|dd| dd == due_date) {
+                    item.task.priority = params.priority;
+                }
+            });
+        }
+
+        persist_tasks(config.todo_file(), tasks)
+    } else {
+        Err(TaskError::FailedToParseQuery)
+    }
 }
 
 fn print_tasks_list(tasks: TaskList) {

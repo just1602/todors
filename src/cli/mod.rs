@@ -2,11 +2,11 @@ mod handlers;
 
 use std::path::PathBuf;
 
-use crate::cli::handlers::{
-    handle_add, handle_clean, handle_done, handle_due, handle_edit, handle_list, handle_remove,
-    handle_undone,
-};
 use clap::{Parser, Subcommand};
+use handlers::{
+    handle_add, handle_clean, handle_done, handle_due, handle_edit, handle_list, handle_modify,
+    handle_remove, handle_undone,
+};
 
 use crate::config::Config;
 
@@ -35,7 +35,7 @@ impl Cli {
             Commands::Due => handle_due(config),
             Commands::Undone(params) => handle_undone(config, params),
             Commands::Clean => handle_clean(config),
-            Commands::Modify => unimplemented!(),
+            Commands::Modify(params) => handle_modify(config, params),
         };
 
         if let Err(e) = result {
@@ -54,7 +54,7 @@ enum Commands {
     Due,
     Undone(UndoneParams),
     Clean,
-    Modify,
+    Modify(ModifyParams),
 }
 
 #[derive(Parser)]
@@ -103,6 +103,7 @@ struct DoneParams {
     about = "Remove selected item from the todo file"
 )]
 struct RemoveParams {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
     query: Vec<String>,
 }
 
@@ -119,5 +120,20 @@ struct EditParams {
     about = "Mark selected tasks as not done"
 )]
 struct UndoneParams {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
     query: Vec<String>,
+}
+
+#[derive(Parser)]
+#[command(
+    name = "modify",
+    visible_alias = "mod",
+    about = "Modify selected tasks as desired"
+)]
+struct ModifyParams {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Vec<String>,
+
+    #[arg(long, short, visible_alias = "pri")]
+    priority: Option<char>,
 }
