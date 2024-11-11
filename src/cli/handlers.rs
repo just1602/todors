@@ -45,6 +45,7 @@ pub fn handle_add(config: Config, params: AddParams) -> Result<(), TaskError> {
 
 pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
+    let total = tasks.len();
 
     if !params.all {
         tasks.retain(|item| !item.task.completed)
@@ -58,7 +59,7 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
         if let Ok(task_query) = query.parse::<TaskQuery>() {
             if !task_query.indexes.is_empty() {
                 tasks.retain(|item| task_query.indexes.contains(&item.idx));
-                print_tasks_list(tasks);
+                print_tasks_list(tasks, total);
                 // returns early since we don't want to handle anything else when we have an index
                 // or a range
                 return Ok(());
@@ -90,7 +91,7 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
         }
     }
 
-    print_tasks_list(tasks);
+    print_tasks_list(tasks, total);
     Ok(())
 }
 
@@ -290,12 +291,13 @@ pub fn handle_undone(config: Config, params: UndoneParams) -> Result<(), TaskErr
 // For now we'll just list all due tasks by date
 pub fn handle_due(config: Config) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
+    let total = tasks.len();
 
     tasks.retain(|item| item.task.due_date.is_some());
 
     tasks.sort_by_key(|item| item.task.due_date);
 
-    print_tasks_list(tasks);
+    print_tasks_list(tasks, total);
 
     Ok(())
 }
@@ -356,15 +358,17 @@ pub fn handle_modify(config: Config, params: ModifyParams) -> Result<(), TaskErr
     }
 }
 
-fn print_tasks_list(tasks: TaskList) {
+fn print_tasks_list(tasks: TaskList, total: usize) {
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item
     let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
         .try_into()
         .expect("Failed to parse task list length width");
-    for item in tasks {
+    for item in &tasks {
         println!("{:0width$}) {}", item.idx, item.task, width = width);
     }
+    println!("-------------------");
+    println!("{}/{} tasks where printed", tasks.len(), total);
 }
 
 fn read_tasks_from_file(config: &Config) -> Result<TaskList, TaskError> {
