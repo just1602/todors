@@ -85,6 +85,8 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
             if let Some(due_date) = task_query.due_date {
                 tasks.retain(|item| item.task.due_date.is_some_and(|dd| dd == due_date))
             }
+
+            tasks.retain(|item| item.task.subject.contains(&task_query.subject));
         }
     }
 
