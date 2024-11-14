@@ -4,6 +4,7 @@ use std::{collections::HashMap, fmt::Display, str::FromStr};
 use crate::tasks::error::TaskError;
 
 // TODO: handle recurrences
+// TODO: migrate away from String to &str
 #[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Task {
     pub subject: String,

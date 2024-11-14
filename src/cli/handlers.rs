@@ -54,37 +54,7 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
     if let Some(query) = params.query {
         let query = TaskQuery::from_string_vec(query)?;
 
-        if !query.indexes.is_empty() {
-            tasks.retain(|item| query.indexes.contains(&item.idx));
-            print_tasks_list(tasks, total);
-            // returns early since we don't want to handle anything else when we have an index
-            // or a range
-            return Ok(());
-        }
-
-        if !query.projects.is_empty() {
-            tasks.retain(|item| {
-                item.task
-                    .projects
-                    .iter()
-                    .any(|pro| query.projects.contains(pro))
-            });
-        }
-
-        if !query.contexts.is_empty() {
-            tasks.retain(|item| {
-                item.task
-                    .contexts
-                    .iter()
-                    .any(|ctx| query.contexts.contains(ctx))
-            });
-        }
-
-        if let Some(due_date) = query.due_date {
-            tasks.retain(|item| item.task.due_date.is_some_and(|dd| dd == due_date))
-        }
-
-        tasks.retain(|item| item.task.subject.contains(&query.subject));
+        tasks = filter_task_from_query(&tasks, &query).collect();
     }
 
     print_tasks_list(tasks, total);
@@ -95,92 +65,23 @@ pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> 
     let mut tasks = read_tasks_from_file(&config)?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    // TODO: display the task that are marked as done
-    if !query.indexes.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if query.indexes.contains(&item.idx) {
-                item.task.complete()
-            }
-        });
-
-        return persist_tasks(config.todo_file(), tasks);
-    }
-
-    // We should probably extract those in a function and just pass the lambda to it if
-    // possible
-    if !query.projects.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if item
-                .task
-                .projects
-                .iter()
-                .any(|pro| query.projects.contains(pro))
-            {
-                item.task.complete()
-            }
-        })
-    }
-
-    if !query.contexts.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if item
-                .task
-                .contexts
-                .iter()
-                .any(|ctx| query.contexts.contains(ctx))
-            {
-                item.task.complete()
-            }
-        })
-    }
-
-    if let Some(due_date) = query.due_date {
-        tasks.iter_mut().for_each(|item| {
-            if item.task.due_date.is_some_and(|dd| dd == due_date) {
-                item.task.complete();
-            }
-        });
-    }
+    filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.complete());
 
     persist_tasks(config.todo_file(), tasks)
 }
 
 pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+    let tasks = read_tasks_from_file(&config)?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    if !query.indexes.is_empty() {
-        let remaning_tasks = tasks
-            .into_iter()
-            .filter(|item| !query.indexes.contains(&item.idx))
-            .collect();
+    let idx_to_remove: Vec<usize> = filter_task_from_query(&tasks, &query)
+        .map(|item| item.idx)
+        .collect();
 
-        return persist_tasks(config.todo_file(), remaning_tasks);
-    }
-
-    if !query.projects.is_empty() {
-        tasks.retain(|item| {
-            !item
-                .task
-                .projects
-                .iter()
-                .any(|pro| !query.projects.contains(pro))
-        })
-    }
-
-    if !query.contexts.is_empty() {
-        tasks.retain(|item| {
-            !item
-                .task
-                .contexts
-                .iter()
-                .any(|ctx| !query.contexts.contains(ctx))
-        });
-    }
-
-    if let Some(due_date) = query.due_date {
-        tasks.retain(|item| !item.task.due_date.is_some_and(|dd| dd == due_date));
-    }
+    let tasks = tasks
+        .into_iter()
+        .filter(|item| !idx_to_remove.contains(&item.idx))
+        .collect();
 
     persist_tasks(config.todo_file(), tasks)
 }
@@ -220,49 +121,7 @@ pub fn handle_undone(config: Config, params: UndoneParams) -> Result<(), TaskErr
     let mut tasks = read_tasks_from_file(&config)?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    if !query.indexes.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if query.indexes.contains(&item.idx) {
-                item.task.undo()
-            }
-        });
-
-        return persist_tasks(config.todo_file(), tasks);
-    }
-
-    if !query.projects.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if item
-                .task
-                .projects
-                .iter()
-                .any(|pro| query.projects.contains(pro))
-            {
-                item.task.undo()
-            }
-        })
-    }
-
-    if !query.contexts.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if item
-                .task
-                .contexts
-                .iter()
-                .any(|ctx| query.contexts.contains(ctx))
-            {
-                item.task.undo()
-            }
-        })
-    }
-
-    if let Some(due_date) = query.due_date {
-        tasks.iter_mut().for_each(|item| {
-            if item.task.due_date.is_some_and(|dd| dd == due_date) {
-                item.task.undo();
-            }
-        });
-    }
+    filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.undo());
 
     persist_tasks(config.todo_file(), tasks)
 }
@@ -274,8 +133,8 @@ pub fn handle_due(config: Config) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
     let total = tasks.len();
 
-    // TODO: this should probably be a method on `TaskList` that return a slice of the filtered and
-    // sorted tasks
+    // TODO: is there a way to have a less leaky interface for this?
+    // It'd probably not be the job of the list to know about due stuff.
     tasks.retain(|item| item.task.due_date.is_some());
     tasks.sort_by_key(|item| item.task.due_date);
 
@@ -284,55 +143,101 @@ pub fn handle_due(config: Config) -> Result<(), TaskError> {
     Ok(())
 }
 
+// TODO: https://github.com/just1602/todors/issues/5
 pub fn handle_modify(config: Config, params: ModifyParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    if !query.indexes.is_empty() {
-        tasks.iter_mut().for_each(|item| {
-            if query.indexes.contains(&item.idx) {
-                // TODO: for now we only handle priority, but we should have a function that
-                // update the all the possible attribute to update for a task
-                item.task.priority = params.priority;
-            }
-        });
-    }
+    filter_mut_task_from_query(&mut tasks, &query)
+        .for_each(|item| item.task.priority = params.priority);
 
-    if !query.projects.is_empty() {
-        tasks.iter_mut().for_each(|item| {
+    persist_tasks(config.todo_file(), tasks)
+}
+
+// FIXME: is there a way to do this without cloning the whole thing?
+fn filter_task_from_query<'a>(
+    tasks: &'a TaskList,
+    query: &'a TaskQuery,
+) -> impl Iterator<Item = TaskListItem> + use<'a> {
+    tasks
+        .iter()
+        .filter(|item| {
+            if query.indexes.contains(&item.idx) {
+                return true;
+            }
+
             if item
                 .task
                 .projects
                 .iter()
                 .any(|pro| query.projects.contains(pro))
             {
-                item.task.priority = params.priority;
+                return true;
             }
-        })
-    }
 
-    if !query.contexts.is_empty() {
-        tasks.iter_mut().for_each(|item| {
             if item
                 .task
                 .contexts
                 .iter()
                 .any(|ctx| query.contexts.contains(ctx))
             {
-                item.task.priority = params.priority;
+                return true;
             }
+
+            if let Some(due_date) = query.due_date {
+                if item.task.due_date.is_some_and(|dd| dd == due_date) {
+                    return true;
+                }
+            }
+
+            if !query.subject.is_empty() && item.task.subject.contains(&query.subject) {
+                return true;
+            }
+
+            false
         })
-    }
+        .cloned()
+}
 
-    if let Some(due_date) = query.due_date {
-        tasks.iter_mut().for_each(|item| {
+fn filter_mut_task_from_query<'a>(
+    tasks: &'a mut TaskList,
+    query: &'a TaskQuery,
+) -> impl Iterator<Item = &'a mut TaskListItem> {
+    tasks.iter_mut().filter(|item| {
+        if query.indexes.contains(&item.idx) {
+            return true;
+        }
+
+        if item
+            .task
+            .projects
+            .iter()
+            .any(|pro| query.projects.contains(pro))
+        {
+            return true;
+        }
+
+        if item
+            .task
+            .contexts
+            .iter()
+            .any(|ctx| query.contexts.contains(ctx))
+        {
+            return true;
+        }
+
+        if let Some(due_date) = query.due_date {
             if item.task.due_date.is_some_and(|dd| dd == due_date) {
-                item.task.priority = params.priority;
+                return true;
             }
-        });
-    }
+        }
 
-    persist_tasks(config.todo_file(), tasks)
+        if !query.subject.is_empty() && item.task.subject.contains(&query.subject) {
+            return true;
+        }
+
+        false
+    })
 }
 
 fn print_tasks_list(tasks: TaskList, total: usize) {
