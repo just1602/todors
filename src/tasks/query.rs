@@ -14,6 +14,14 @@ pub struct TaskQuery {
     pub subject: String,
 }
 
+impl TaskQuery {
+    pub fn from_string_vec(v: Vec<String>) -> Result<TaskQuery, TaskError> {
+        let query = v.join(" ");
+
+        query.parse()
+    }
+}
+
 impl FromStr for TaskQuery {
     type Err = TaskError;
 
@@ -238,5 +246,17 @@ mod tests {
 
         assert_eq!(query.subject, "");
         assert_eq!(query.indexes, vec![2, 3, 4, 5, 9]);
+    }
+
+    #[test]
+    fn it_can_parse_directly_from_string_vec() {
+        let clap_query = vec!["test".to_string(), "team:sre".to_string()];
+        let query = TaskQuery::from_string_vec(clap_query).unwrap();
+
+        assert_eq!(query.subject, "test");
+        assert_eq!(
+            query.tags,
+            HashMap::from([("team".to_string(), "sre".to_string())])
+        );
     }
 }

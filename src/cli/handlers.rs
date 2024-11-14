@@ -52,11 +52,7 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
     }
 
     if let Some(query) = params.query {
-        // the query in the `ListParams` struct must be a `Vec<String>` to avoid the need of
-        // quoting, so we join it before parsing it
-        let query = query.join(" ");
-
-        if let Ok(task_query) = query.parse::<TaskQuery>() {
+        if let Ok(task_query) = TaskQuery::from_string_vec(query) {
             if !task_query.indexes.is_empty() {
                 tasks.retain(|item| task_query.indexes.contains(&item.idx));
                 print_tasks_list(tasks, total);
@@ -98,9 +94,7 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
 pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
 
-    let query = params.query.join(" ");
-
-    if let Ok(query) = query.parse::<TaskQuery>() {
+    if let Ok(query) = TaskQuery::from_string_vec(params.query) {
         // TODO: display the task that are marked as done
         if !query.indexes.is_empty() {
             tasks.iter_mut().for_each(|item| {
@@ -157,9 +151,7 @@ pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> 
 pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
 
-    let query = params.query.join(" ");
-
-    if let Ok(query) = query.parse::<TaskQuery>() {
+    if let Ok(query) = TaskQuery::from_string_vec(params.query) {
         if !query.indexes.is_empty() {
             let remaning_tasks = tasks
                 .into_iter()
@@ -233,9 +225,7 @@ pub fn handle_clean(config: Config) -> Result<(), TaskError> {
 pub fn handle_undone(config: Config, params: UndoneParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
 
-    let query = params.query.join(" ");
-
-    if let Ok(query) = query.parse::<TaskQuery>() {
+    if let Ok(query) = TaskQuery::from_string_vec(params.query) {
         if !query.indexes.is_empty() {
             tasks.iter_mut().for_each(|item| {
                 if query.indexes.contains(&item.idx) {
@@ -305,9 +295,7 @@ pub fn handle_due(config: Config) -> Result<(), TaskError> {
 pub fn handle_modify(config: Config, params: ModifyParams) -> Result<(), TaskError> {
     let mut tasks = read_tasks_from_file(&config)?;
 
-    let query = params.query.join(" ");
-
-    if let Ok(query) = query.parse::<TaskQuery>() {
+    if let Ok(query) = TaskQuery::from_string_vec(params.query) {
         if !query.indexes.is_empty() {
             tasks.iter_mut().for_each(|item| {
                 if query.indexes.contains(&item.idx) {
