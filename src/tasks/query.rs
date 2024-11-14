@@ -71,10 +71,6 @@ impl FromStr for TaskQuery {
                 }
                 ('-', State::Index(j)) => State::Range(j, i),
                 // FIXME: test this correctly to see if all the cases works
-                // FIXME: Don't allow someone to specify a indexes or ranges with something else
-                // like word, project or context, since it can be confusing or create error
-                // The priority should be, index and ranges, then more abstract concept like
-                // context, project, tags, etc
                 (',' | ' ', State::Index(j)) => {
                     if let Ok(idx) = s[j..i].parse::<usize>() {
                         indexes.push(idx)
