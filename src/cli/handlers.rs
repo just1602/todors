@@ -367,7 +367,7 @@ fn print_tasks_list(tasks: TaskList, total: usize) {
     for item in &tasks {
         println!("{:0width$}) {}", item.idx, item.task, width = width);
     }
-    println!("-------------------");
+    println!("⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯");
     println!("{}/{} tasks where printed", tasks.len(), total);
 }
 
