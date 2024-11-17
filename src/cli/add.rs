@@ -17,7 +17,7 @@ pub struct Add {
 }
 
 impl Add {
-    pub fn execute(self, storage: impl TaskStorage) -> Result<(), TaskError> {
+    pub fn execute(self, storage: TaskStorage) -> Result<(), TaskError> {
         let task = TaskBuilder::new(self.task.join(" "))
             .priority(self.pri)
             .build()?;

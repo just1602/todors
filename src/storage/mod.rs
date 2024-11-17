@@ -6,23 +6,18 @@ use crate::tasks::{
     task::Task,
 };
 
-pub trait TaskStorage {
-    fn get_all(&self) -> Result<TaskList, TaskError>;
-    fn perist(&self, tasks: TaskList) -> Result<(), TaskError>;
-}
-
-pub struct FileTaskStorage {
+pub struct TaskStorage {
     todo_file: PathBuf,
 }
 
-impl FileTaskStorage {
+impl TaskStorage {
     pub fn new(todo_file: PathBuf) -> Self {
-        FileTaskStorage { todo_file }
+        TaskStorage { todo_file }
     }
 }
 
-impl TaskStorage for FileTaskStorage {
-    fn get_all(&self) -> Result<TaskList, TaskError> {
+impl TaskStorage {
+    pub fn get_all(&self) -> Result<TaskList, TaskError> {
         let Ok(content) = std::fs::read_to_string(&self.todo_file) else {
             return Err(TaskError::FailedToOpenTodoFile);
         };
@@ -39,7 +34,7 @@ impl TaskStorage for FileTaskStorage {
         Ok(tasks)
     }
 
-    fn perist(&self, tasks: TaskList) -> Result<(), TaskError> {
+    pub fn perist(&self, tasks: TaskList) -> Result<(), TaskError> {
         let mut file = if let Ok(file) = OpenOptions::new()
             .create(true)
             .truncate(true)
