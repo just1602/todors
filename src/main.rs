@@ -1,6 +1,6 @@
 use clap::Parser;
 use std::path::PathBuf;
-use todors::{cli::Cli, config::Config};
+use todors::{cli::Cli, config::Config, storage::FileTaskStorage};
 
 fn main() {
     let cli = Cli::parse();
@@ -17,6 +17,7 @@ fn main() {
     };
 
     let config = Config::from_path(config_file_path);
+    let storage = FileTaskStorage::new(config.todo_file());
 
-    cli.run(config)
+    cli.run(config, storage)
 }

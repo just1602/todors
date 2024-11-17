@@ -1,7 +1,10 @@
 use chrono::Local;
 
-use crate::tasks::{list::TaskListItem, query::TaskQuery};
-use std::{fs::OpenOptions, io::Write, path::PathBuf};
+use crate::{
+    storage::TaskStorage,
+    tasks::{list::TaskListItem, query::TaskQuery},
+};
+use std::{fs::OpenOptions, io::Write};
 
 use crate::{
     config::Config,
@@ -43,8 +46,8 @@ pub fn handle_add(config: Config, params: AddParams) -> Result<(), TaskError> {
     }
 }
 
-pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+pub fn handle_list(storage: impl TaskStorage, params: ListParams) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
     let total = tasks.len();
 
     if !params.all {
@@ -61,17 +64,17 @@ pub fn handle_list(config: Config, params: ListParams) -> Result<(), TaskError> 
     Ok(())
 }
 
-pub fn handle_done(config: Config, params: DoneParams) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+pub fn handle_done(storage: impl TaskStorage, params: DoneParams) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
     filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.complete());
 
-    persist_tasks(config.todo_file(), tasks)
+    storage.perist(tasks)
 }
 
-pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskError> {
-    let tasks = read_tasks_from_file(&config)?;
+pub fn handle_remove(storage: impl TaskStorage, params: RemoveParams) -> Result<(), TaskError> {
+    let tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
     let idx_to_remove: Vec<usize> = filter_task_from_query(&tasks, &query)
@@ -83,7 +86,7 @@ pub fn handle_remove(config: Config, params: RemoveParams) -> Result<(), TaskErr
         .filter(|item| !idx_to_remove.contains(&item.idx))
         .collect();
 
-    persist_tasks(config.todo_file(), tasks)
+    storage.perist(tasks)
 }
 
 pub fn handle_edit(config: Config, params: EditParams) -> Result<(), TaskError> {
@@ -109,49 +112,46 @@ pub fn handle_edit(config: Config, params: EditParams) -> Result<(), TaskError> 
     Ok(())
 }
 
-pub fn handle_clean(config: Config) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+pub fn handle_clean(storage: impl TaskStorage) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
 
     tasks.retain(|i| !i.task.completed);
 
-    persist_tasks(config.todo_file(), tasks)
+    storage.perist(tasks)
 }
 
-pub fn handle_undone(config: Config, params: UndoneParams) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+pub fn handle_undone(storage: impl TaskStorage, params: UndoneParams) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
     filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.undo());
 
-    persist_tasks(config.todo_file(), tasks)
+    storage.perist(tasks)
 }
 
 // TODO: a query or an argument to list tasks due today, tomorrow, this week, next week, this
 // month, next month
 // For now we'll just list all due tasks by date
-pub fn handle_due(config: Config) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
-    let total = tasks.len();
+pub fn handle_due(storage: impl TaskStorage) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
 
     // TODO: is there a way to have a less leaky interface for this?
     // It'd probably not be the job of the list to know about due stuff.
     tasks.retain(|item| item.task.due_date.is_some());
     tasks.sort_by_key(|item| item.task.due_date);
 
-    print_tasks_list(tasks, total);
-
-    Ok(())
+    storage.perist(tasks)
 }
 
 // TODO: https://github.com/just1602/todors/issues/5
-pub fn handle_modify(config: Config, params: ModifyParams) -> Result<(), TaskError> {
-    let mut tasks = read_tasks_from_file(&config)?;
+pub fn handle_modify(storage: impl TaskStorage, params: ModifyParams) -> Result<(), TaskError> {
+    let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
     filter_mut_task_from_query(&mut tasks, &query)
         .for_each(|item| item.task.priority = params.priority);
 
-    persist_tasks(config.todo_file(), tasks)
+    storage.perist(tasks)
 }
 
 // FIXME: is there a way to do this without cloning the whole thing?
@@ -251,46 +251,4 @@ fn print_tasks_list(tasks: TaskList, total: usize) {
     }
     println!("⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯");
     println!("{}/{} tasks where printed", tasks.len(), total);
-}
-
-fn read_tasks_from_file(config: &Config) -> Result<TaskList, TaskError> {
-    let Ok(content) = std::fs::read_to_string(config.todo_file()) else {
-        return Err(TaskError::FailedToOpenTodoFile);
-    };
-
-    let mut tasks = TaskList::new();
-    for (idx, line) in content.lines().enumerate() {
-        let Ok(task) = line.parse::<Task>() else {
-            return Err(TaskError::FailedToParse);
-        };
-
-        tasks.push(TaskListItem { idx: idx + 1, task })
-    }
-
-    Ok(tasks)
-}
-
-// TODO: move this function in it's own module
-// TODO: create a storage struct that would contain the dir path / file path instead of passing
-// config around
-fn persist_tasks(file: PathBuf, tasks: TaskList) -> Result<(), TaskError> {
-    let mut file = if let Ok(file) = OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .write(true)
-        .open(file)
-    {
-        file
-    } else {
-        return Err(TaskError::FailedToOpenTodoFile);
-    };
-
-    for item in tasks {
-        match file.write_fmt(format_args!("{}\n", item.task)) {
-            Ok(_) => {}
-            Err(_) => return Err(TaskError::FailedToSave),
-        }
-    }
-
-    Ok(())
 }

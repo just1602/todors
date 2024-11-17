@@ -9,6 +9,7 @@ use handlers::{
 };
 
 use crate::config::Config;
+use crate::storage::TaskStorage;
 
 #[derive(Parser)]
 #[command(
@@ -25,17 +26,17 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn run(self, config: Config) {
+    pub fn run(self, config: Config, storage: impl TaskStorage) {
         let result = match self.command {
             Commands::Add(params) => handle_add(config, params),
-            Commands::Done(params) => handle_done(config, params),
-            Commands::List(params) => handle_list(config, params),
-            Commands::Remove(params) => handle_remove(config, params),
+            Commands::Done(params) => handle_done(storage, params),
+            Commands::List(params) => handle_list(storage, params),
+            Commands::Remove(params) => handle_remove(storage, params),
             Commands::Edit(params) => handle_edit(config, params),
-            Commands::Due => handle_due(config),
-            Commands::Undone(params) => handle_undone(config, params),
-            Commands::Clean => handle_clean(config),
-            Commands::Modify(params) => handle_modify(config, params),
+            Commands::Due => handle_due(storage),
+            Commands::Undone(params) => handle_undone(storage, params),
+            Commands::Clean => handle_clean(storage),
+            Commands::Modify(params) => handle_modify(storage, params),
         };
 
         if let Err(e) = result {
