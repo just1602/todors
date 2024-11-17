@@ -1,4 +1,4 @@
-mod add;
+pub mod add;
 mod handlers;
 
 use std::path::PathBuf;
