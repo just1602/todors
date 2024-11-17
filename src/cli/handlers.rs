@@ -1,6 +1,6 @@
 use crate::{
     storage::TaskStorage,
-    tasks::{list::TaskListItem, query::TaskQuery, task::TaskBuilder},
+    tasks::{list::TaskListItem, query::TaskQuery},
 };
 
 use crate::{
@@ -8,30 +8,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskList},
 };
 
-use super::{
-    AddParams, DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams,
-};
-
-pub fn handle_add(storage: impl TaskStorage, params: AddParams) -> Result<(), TaskError> {
-    let task = TaskBuilder::new(params.task.join(" "))
-        .priority(params.pri)
-        .build()?;
-
-    let mut tasks = storage.get_all()?;
-
-    let item = TaskListItem {
-        idx: tasks.len() + 1,
-        task: task.clone(),
-    };
-
-    // NOTE: maybe I should just have keep the writing code inline
-    // FIXME: implement copy for `Task` and `TaskListItem`
-    tasks.push(item.clone());
-
-    print_tasks_list(vec![item], tasks.len());
-
-    storage.perist(tasks)
-}
+use super::{DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams};
 
 pub fn handle_list(storage: impl TaskStorage, params: ListParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
@@ -227,7 +204,7 @@ fn filter_mut_task_from_query<'a>(
     })
 }
 
-fn print_tasks_list(tasks: TaskList, total: usize) {
+pub fn print_tasks_list(tasks: TaskList, total: usize) {
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item
     let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
