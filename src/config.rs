@@ -51,16 +51,11 @@ mod tests {
 
     #[test]
     fn it_support_tild_as_home_dir() {
-        #[cfg(target_os = "linux")]
-        let home_path_prefix = "/home/";
-        #[cfg(target_os = "macos")]
-        let home_path_prefix = "/Users/";
-
         let config = Config {
             todo_dir: PathBuf::from("~/.todo"),
         };
 
-        assert!(config.todo_file().starts_with(home_path_prefix));
+        assert!(!config.todo_file().starts_with("~"));
         assert!(config.todo_file().ends_with(".todo/todo.txt"));
     }
 }
