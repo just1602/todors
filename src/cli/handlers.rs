@@ -1,7 +1,5 @@
-use crate::{
-    storage::TaskStorage,
-    tasks::{list::TaskListItem, query::TaskQuery},
-};
+use crate::tasks::list::TaskListExt;
+use crate::{storage::TaskStorage, tasks::query::TaskQuery};
 
 use crate::{
     config::Config,
@@ -21,7 +19,7 @@ pub fn handle_list(storage: TaskStorage, params: ListParams) -> Result<(), TaskE
     if let Some(query) = params.query {
         let query = TaskQuery::from_string_vec(query)?;
 
-        tasks = filter_task_from_query(&tasks, &query).collect();
+        tasks = tasks.filter_from_query(&query).collect();
     }
 
     print_tasks_list(tasks, total);
@@ -32,7 +30,9 @@ pub fn handle_done(storage: TaskStorage, params: DoneParams) -> Result<(), TaskE
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.complete());
+    tasks
+        .filter_mut_from_query(&query)
+        .for_each(|item| item.task.complete());
 
     storage.perist(tasks)
 }
@@ -41,7 +41,8 @@ pub fn handle_remove(storage: TaskStorage, params: RemoveParams) -> Result<(), T
     let tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    let idx_to_remove: Vec<usize> = filter_task_from_query(&tasks, &query)
+    let idx_to_remove: Vec<usize> = tasks
+        .filter_from_query(&query)
         .map(|item| item.idx)
         .collect();
 
@@ -88,7 +89,9 @@ pub fn handle_undone(storage: TaskStorage, params: UndoneParams) -> Result<(), T
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    filter_mut_task_from_query(&mut tasks, &query).for_each(|item| item.task.undo());
+    tasks
+        .filter_mut_from_query(&query)
+        .for_each(|item| item.task.undo());
 
     storage.perist(tasks)
 }
@@ -112,96 +115,11 @@ pub fn handle_modify(storage: TaskStorage, params: ModifyParams) -> Result<(), T
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
-    filter_mut_task_from_query(&mut tasks, &query)
+    tasks
+        .filter_mut_from_query(&query)
         .for_each(|item| item.task.priority = params.priority);
 
     storage.perist(tasks)
-}
-
-// FIXME: is there a way to do this without cloning the whole thing?
-fn filter_task_from_query<'a>(
-    tasks: &'a TaskList,
-    query: &'a TaskQuery,
-) -> impl Iterator<Item = TaskListItem> + use<'a> {
-    tasks
-        .iter()
-        .filter(|item| {
-            if query.indexes.contains(&item.idx) {
-                return true;
-            }
-
-            if item
-                .task
-                .projects
-                .iter()
-                .any(|pro| query.projects.contains(pro))
-            {
-                return true;
-            }
-
-            if item
-                .task
-                .contexts
-                .iter()
-                .any(|ctx| query.contexts.contains(ctx))
-            {
-                return true;
-            }
-
-            if let Some(due_date) = query.due_date {
-                if item.task.due_date.is_some_and(|dd| dd == due_date) {
-                    return true;
-                }
-            }
-
-            if !query.subject.is_empty() && item.task.subject.contains(&query.subject) {
-                return true;
-            }
-
-            false
-        })
-        .cloned()
-}
-
-fn filter_mut_task_from_query<'a>(
-    tasks: &'a mut TaskList,
-    query: &'a TaskQuery,
-) -> impl Iterator<Item = &'a mut TaskListItem> {
-    tasks.iter_mut().filter(|item| {
-        if query.indexes.contains(&item.idx) {
-            return true;
-        }
-
-        if item
-            .task
-            .projects
-            .iter()
-            .any(|pro| query.projects.contains(pro))
-        {
-            return true;
-        }
-
-        if item
-            .task
-            .contexts
-            .iter()
-            .any(|ctx| query.contexts.contains(ctx))
-        {
-            return true;
-        }
-
-        if let Some(due_date) = query.due_date {
-            if item.task.due_date.is_some_and(|dd| dd == due_date) {
-                return true;
-            }
-        }
-
-        if !query.subject.is_empty() && item.task.subject.contains(&query.subject) {
-            return true;
-        }
-
-        false
-    })
 }
 
 pub fn print_tasks_list(tasks: TaskList, total: usize) {
