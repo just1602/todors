@@ -1,4 +1,4 @@
-use crate::tasks::list::TaskListExt;
+use crate::tasks::list::TaskListVecExt;
 use crate::{storage::TaskStorage, tasks::query::TaskQuery};
 
 use crate::{
