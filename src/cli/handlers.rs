@@ -1,49 +1,36 @@
-use chrono::Local;
-
 use crate::{
     storage::TaskStorage,
-    tasks::{list::TaskListItem, query::TaskQuery},
+    tasks::{list::TaskListItem, query::TaskQuery, task::TaskBuilder},
 };
-use std::{fs::OpenOptions, io::Write};
 
 use crate::{
     config::Config,
-    tasks::{error::TaskError, list::TaskList, task::Task},
+    tasks::{error::TaskError, list::TaskList},
 };
 
 use super::{
     AddParams, DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams,
 };
 
-pub fn handle_add(config: Config, params: AddParams) -> Result<(), TaskError> {
-    let task = params.task.join(" ");
-    let mut task: Task = task.parse()?;
-    // FIXME: this should probably be in a factory method
-    task.created_at = Some(Local::now().date_naive());
+pub fn handle_add(storage: impl TaskStorage, params: AddParams) -> Result<(), TaskError> {
+    let task = TaskBuilder::new(params.task.join(" "))
+        .priority(params.pri)
+        .build()?;
 
-    // FIXME: this should probably be in a factory method
-    if params.pri.is_some() && task.priority.is_none() {
-        task.priority = params.pri
-    }
+    let mut tasks = storage.get_all()?;
 
-    // FIXME: this could be seen as an "optimisation",
-    // but really, we should fetch the list,
-    // add the new task to it, and persist the list again
-    let mut file = if let Ok(file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(config.todo_file())
-    {
-        file
-    } else {
-        return Err(TaskError::FailedToOpenTodoFile);
+    let item = TaskListItem {
+        idx: tasks.len() + 1,
+        task: task.clone(),
     };
 
-    match file.write_fmt(format_args!("{}\n", task)) {
-        Ok(_) => Ok(()),
-        // FIXME: find a way to add the error as source
-        Err(_) => Err(TaskError::FailedToSave),
-    }
+    // NOTE: maybe I should just have keep the writing code inline
+    // FIXME: implement copy for `Task` and `TaskListItem`
+    tasks.push(item.clone());
+
+    print_tasks_list(vec![item], tasks.len());
+
+    storage.perist(tasks)
 }
 
 pub fn handle_list(storage: impl TaskStorage, params: ListParams) -> Result<(), TaskError> {

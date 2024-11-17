@@ -18,6 +18,38 @@ pub struct Task {
     pub tags: HashMap<String, String>,
 }
 
+pub struct TaskBuilder {
+    user_query: String,
+    pri: Option<char>,
+}
+
+impl TaskBuilder {
+    pub fn new(user_query: String) -> TaskBuilder {
+        TaskBuilder {
+            user_query,
+            pri: None,
+        }
+    }
+
+    pub fn priority(mut self, pri: Option<char>) -> TaskBuilder {
+        self.pri = pri;
+        self
+    }
+
+    pub fn build(self) -> Result<Task, TaskError> {
+        let mut task: Task = self.user_query.parse()?;
+        task.created_at = Some(Local::now().date_naive());
+
+        if task.priority.is_none() {
+            task.priority = self.pri;
+        }
+
+        Ok(task)
+    }
+}
+
+impl Task {}
+
 impl Display for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.completed {

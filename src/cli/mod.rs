@@ -28,7 +28,7 @@ pub struct Cli {
 impl Cli {
     pub fn run(self, config: Config, storage: impl TaskStorage) {
         let result = match self.command {
-            Commands::Add(params) => handle_add(config, params),
+            Commands::Add(params) => handle_add(storage, params),
             Commands::Done(params) => handle_done(storage, params),
             Commands::List(params) => handle_list(storage, params),
             Commands::Remove(params) => handle_remove(storage, params),
