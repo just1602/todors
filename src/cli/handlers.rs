@@ -10,7 +10,7 @@ use crate::{
 
 use super::{DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams};
 
-pub fn handle_list(storage: impl TaskStorage, params: ListParams) -> Result<(), TaskError> {
+pub fn handle_list(storage: TaskStorage, params: ListParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
     let total = tasks.len();
 
@@ -28,7 +28,7 @@ pub fn handle_list(storage: impl TaskStorage, params: ListParams) -> Result<(), 
     Ok(())
 }
 
-pub fn handle_done(storage: impl TaskStorage, params: DoneParams) -> Result<(), TaskError> {
+pub fn handle_done(storage: TaskStorage, params: DoneParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
@@ -37,7 +37,7 @@ pub fn handle_done(storage: impl TaskStorage, params: DoneParams) -> Result<(), 
     storage.perist(tasks)
 }
 
-pub fn handle_remove(storage: impl TaskStorage, params: RemoveParams) -> Result<(), TaskError> {
+pub fn handle_remove(storage: TaskStorage, params: RemoveParams) -> Result<(), TaskError> {
     let tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
@@ -76,7 +76,7 @@ pub fn handle_edit(config: Config, params: EditParams) -> Result<(), TaskError> 
     Ok(())
 }
 
-pub fn handle_clean(storage: impl TaskStorage) -> Result<(), TaskError> {
+pub fn handle_clean(storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
 
     tasks.retain(|i| !i.task.completed);
@@ -84,7 +84,7 @@ pub fn handle_clean(storage: impl TaskStorage) -> Result<(), TaskError> {
     storage.perist(tasks)
 }
 
-pub fn handle_undone(storage: impl TaskStorage, params: UndoneParams) -> Result<(), TaskError> {
+pub fn handle_undone(storage: TaskStorage, params: UndoneParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
@@ -96,7 +96,7 @@ pub fn handle_undone(storage: impl TaskStorage, params: UndoneParams) -> Result<
 // TODO: a query or an argument to list tasks due today, tomorrow, this week, next week, this
 // month, next month
 // For now we'll just list all due tasks by date
-pub fn handle_due(storage: impl TaskStorage) -> Result<(), TaskError> {
+pub fn handle_due(storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
 
     // TODO: is there a way to have a less leaky interface for this?
@@ -108,7 +108,7 @@ pub fn handle_due(storage: impl TaskStorage) -> Result<(), TaskError> {
 }
 
 // TODO: https://github.com/just1602/todors/issues/5
-pub fn handle_modify(storage: impl TaskStorage, params: ModifyParams) -> Result<(), TaskError> {
+pub fn handle_modify(storage: TaskStorage, params: ModifyParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(params.query)?;
 
