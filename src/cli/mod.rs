@@ -1,13 +1,15 @@
+mod add;
 mod handlers;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use handlers::{
-    handle_add, handle_clean, handle_done, handle_due, handle_edit, handle_list, handle_modify,
-    handle_remove, handle_undone,
+    handle_clean, handle_done, handle_due, handle_edit, handle_list, handle_modify, handle_remove,
+    handle_undone,
 };
 
+use crate::cli::add::Add;
 use crate::config::Config;
 use crate::storage::TaskStorage;
 
@@ -28,7 +30,7 @@ pub struct Cli {
 impl Cli {
     pub fn run(self, config: Config, storage: impl TaskStorage) {
         let result = match self.command {
-            Commands::Add(params) => handle_add(storage, params),
+            Commands::Add(add) => add.execute(storage),
             Commands::Done(params) => handle_done(storage, params),
             Commands::List(params) => handle_list(storage, params),
             Commands::Remove(params) => handle_remove(storage, params),
@@ -47,7 +49,7 @@ impl Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Add(AddParams),
+    Add(Add),
     Done(DoneParams),
     List(ListParams),
     Remove(RemoveParams),
@@ -56,16 +58,6 @@ enum Commands {
     Undone(UndoneParams),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(name = "add", visible_alias = "a", about = "Add a task to the list")]
-struct AddParams {
-    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    task: Vec<String>,
-
-    #[arg(long, help = "Set the priority directly after creating the task")]
-    pri: Option<char>,
 }
 
 #[derive(Parser)]
