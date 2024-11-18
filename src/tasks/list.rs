@@ -91,6 +91,7 @@ impl TaskListVecExt for TaskList {
                 }
             }
 
+            // FIXME: add tests for this, and make sure to add a test that check for empty subject
             if !query.subject.is_empty() && item.task.subject.contains(&query.subject) {
                 return true;
             }
