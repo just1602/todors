@@ -1,4 +1,5 @@
 pub mod add;
+pub mod clean;
 pub mod done;
 pub mod due;
 pub mod edit;
@@ -11,9 +12,9 @@ pub mod undone;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use handlers::handle_clean;
 
 use crate::cli::add::Add;
+use crate::cli::clean::Clean;
 use crate::cli::done::Done;
 use crate::cli::due::Due;
 use crate::cli::edit::Edit;
@@ -48,7 +49,7 @@ impl Cli {
             Commands::Edit(edit) => edit.execute(config),
             Commands::Due(due) => due.execute(storage),
             Commands::Undone(undone) => undone.execute(storage),
-            Commands::Clean => handle_clean(storage),
+            Commands::Clean(clean) => clean.execute(storage),
             Commands::Modify(modify) => modify.execute(storage),
         };
 
@@ -67,6 +68,6 @@ enum Commands {
     Edit(Edit),
     Due(Due),
     Undone(Undone),
-    Clean,
+    Clean(Clean),
     Modify(Modify),
 }

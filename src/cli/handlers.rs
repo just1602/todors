@@ -1,14 +1,4 @@
-use crate::storage::TaskStorage;
-
-use crate::tasks::{error::TaskError, list::TaskList};
-
-pub fn handle_clean(storage: TaskStorage) -> Result<(), TaskError> {
-    let mut tasks = storage.get_all()?;
-
-    tasks.retain(|i| !i.task.completed);
-
-    storage.perist(tasks)
-}
+use crate::tasks::list::TaskList;
 
 pub fn print_tasks_list(tasks: TaskList, total: usize) {
     // FIXME: find the right way to display colors for completed and prioritized tasks
