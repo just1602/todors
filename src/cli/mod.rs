@@ -4,17 +4,19 @@ pub mod edit;
 mod handlers;
 pub mod list;
 pub mod remove;
+pub mod undone;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use handlers::{handle_clean, handle_due, handle_modify, handle_undone};
+use handlers::{handle_clean, handle_due, handle_modify};
 
 use crate::cli::add::Add;
 use crate::cli::done::Done;
 use crate::cli::edit::Edit;
 use crate::cli::list::List;
 use crate::cli::remove::Remove;
+use crate::cli::undone::Undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
 
@@ -41,7 +43,7 @@ impl Cli {
             Commands::Remove(remove) => remove.execute(storage),
             Commands::Edit(edit) => edit.execute(config),
             Commands::Due => handle_due(storage),
-            Commands::Undone(params) => handle_undone(storage, params),
+            Commands::Undone(undone) => undone.execute(storage),
             Commands::Clean => handle_clean(storage),
             Commands::Modify(params) => handle_modify(storage, params),
         };
@@ -60,20 +62,9 @@ enum Commands {
     Remove(Remove),
     Edit(Edit),
     Due,
-    Undone(UndoneParams),
+    Undone(Undone),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(
-    name = "undone",
-    visible_alias = "undo",
-    about = "Mark selected tasks as not done"
-)]
-struct UndoneParams {
-    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
 }
 
 #[derive(Parser)]

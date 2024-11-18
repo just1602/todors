@@ -3,23 +3,12 @@ use crate::{storage::TaskStorage, tasks::query::TaskQuery};
 
 use crate::tasks::{error::TaskError, list::TaskList};
 
-use super::{ModifyParams, UndoneParams};
+use super::ModifyParams;
 
 pub fn handle_clean(storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
 
     tasks.retain(|i| !i.task.completed);
-
-    storage.perist(tasks)
-}
-
-pub fn handle_undone(storage: TaskStorage, params: UndoneParams) -> Result<(), TaskError> {
-    let mut tasks = storage.get_all()?;
-    let query = TaskQuery::from_string_vec(params.query)?;
-
-    tasks
-        .filter_mut_from_query(&query)
-        .for_each(|item| item.task.undo());
 
     storage.perist(tasks)
 }
