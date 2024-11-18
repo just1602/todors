@@ -6,24 +6,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskList},
 };
 
-use super::{EditParams, ModifyParams, RemoveParams, UndoneParams};
-
-pub fn handle_remove(storage: TaskStorage, params: RemoveParams) -> Result<(), TaskError> {
-    let tasks = storage.get_all()?;
-    let query = TaskQuery::from_string_vec(params.query)?;
-
-    let idx_to_remove: Vec<usize> = tasks
-        .filter_from_query(&query)
-        .map(|item| item.idx)
-        .collect();
-
-    let tasks = tasks
-        .into_iter()
-        .filter(|item| !idx_to_remove.contains(&item.idx))
-        .collect();
-
-    storage.perist(tasks)
-}
+use super::{EditParams, ModifyParams, UndoneParams};
 
 pub fn handle_edit(config: Config, params: EditParams) -> Result<(), TaskError> {
     let editor = match std::env::var("EDITOR") {

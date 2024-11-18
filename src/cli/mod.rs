@@ -2,17 +2,17 @@ pub mod add;
 pub mod done;
 mod handlers;
 pub mod list;
+pub mod remove;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use handlers::{
-    handle_clean, handle_due, handle_edit, handle_modify, handle_remove, handle_undone,
-};
+use handlers::{handle_clean, handle_due, handle_edit, handle_modify, handle_undone};
 
 use crate::cli::add::Add;
 use crate::cli::done::Done;
 use crate::cli::list::List;
+use crate::cli::remove::Remove;
 use crate::config::Config;
 use crate::storage::TaskStorage;
 
@@ -36,7 +36,7 @@ impl Cli {
             Commands::Add(add) => add.execute(storage),
             Commands::Done(done) => done.execute(storage),
             Commands::List(list) => list.execute(storage),
-            Commands::Remove(params) => handle_remove(storage, params),
+            Commands::Remove(remove) => remove.execute(storage),
             Commands::Edit(params) => handle_edit(config, params),
             Commands::Due => handle_due(storage),
             Commands::Undone(params) => handle_undone(storage, params),
@@ -55,23 +55,12 @@ enum Commands {
     Add(Add),
     Done(Done),
     List(List),
-    Remove(RemoveParams),
+    Remove(Remove),
     Edit(EditParams),
     Due,
     Undone(UndoneParams),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(
-    name = "remove",
-    visible_alias = "rm",
-    about = "Remove selected item from the todo file"
-)]
-struct RemoveParams {
-    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
 }
 
 #[derive(Parser)]
