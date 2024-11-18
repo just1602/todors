@@ -1,9 +1,6 @@
-use crate::tasks::list::TaskListVecExt;
-use crate::{storage::TaskStorage, tasks::query::TaskQuery};
+use crate::storage::TaskStorage;
 
 use crate::tasks::{error::TaskError, list::TaskList};
-
-use super::ModifyParams;
 
 pub fn handle_clean(storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
@@ -23,18 +20,6 @@ pub fn handle_due(storage: TaskStorage) -> Result<(), TaskError> {
     // It'd probably not be the job of the list to know about due stuff.
     tasks.retain(|item| item.task.due_date.is_some());
     tasks.sort_by_key(|item| item.task.due_date);
-
-    storage.perist(tasks)
-}
-
-// TODO: https://github.com/just1602/todors/issues/5
-pub fn handle_modify(storage: TaskStorage, params: ModifyParams) -> Result<(), TaskError> {
-    let mut tasks = storage.get_all()?;
-    let query = TaskQuery::from_string_vec(params.query)?;
-
-    tasks
-        .filter_mut_from_query(&query)
-        .for_each(|item| item.task.priority = params.priority);
 
     storage.perist(tasks)
 }
