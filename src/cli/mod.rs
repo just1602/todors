@@ -1,5 +1,6 @@
 pub mod add;
 pub mod done;
+pub mod edit;
 mod handlers;
 pub mod list;
 pub mod remove;
@@ -7,10 +8,11 @@ pub mod remove;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use handlers::{handle_clean, handle_due, handle_edit, handle_modify, handle_undone};
+use handlers::{handle_clean, handle_due, handle_modify, handle_undone};
 
 use crate::cli::add::Add;
 use crate::cli::done::Done;
+use crate::cli::edit::Edit;
 use crate::cli::list::List;
 use crate::cli::remove::Remove;
 use crate::config::Config;
@@ -37,7 +39,7 @@ impl Cli {
             Commands::Done(done) => done.execute(storage),
             Commands::List(list) => list.execute(storage),
             Commands::Remove(remove) => remove.execute(storage),
-            Commands::Edit(params) => handle_edit(config, params),
+            Commands::Edit(edit) => edit.execute(config),
             Commands::Due => handle_due(storage),
             Commands::Undone(params) => handle_undone(storage, params),
             Commands::Clean => handle_clean(storage),
@@ -56,17 +58,11 @@ enum Commands {
     Done(Done),
     List(List),
     Remove(Remove),
-    Edit(EditParams),
+    Edit(Edit),
     Due,
     Undone(UndoneParams),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(name = "edit", about = "Edit the todo file with a text editor")]
-struct EditParams {
-    item: Option<u32>,
 }
 
 #[derive(Parser)]
