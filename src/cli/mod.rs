@@ -1,15 +1,16 @@
 pub mod add;
 mod handlers;
+pub mod list;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use handlers::{
-    handle_clean, handle_done, handle_due, handle_edit, handle_list, handle_modify, handle_remove,
-    handle_undone,
+    handle_clean, handle_done, handle_due, handle_edit, handle_modify, handle_remove, handle_undone,
 };
 
 use crate::cli::add::Add;
+use crate::cli::list::List;
 use crate::config::Config;
 use crate::storage::TaskStorage;
 
@@ -32,7 +33,7 @@ impl Cli {
         let result = match self.command {
             Commands::Add(add) => add.execute(storage),
             Commands::Done(params) => handle_done(storage, params),
-            Commands::List(params) => handle_list(storage, params),
+            Commands::List(list) => list.execute(storage),
             Commands::Remove(params) => handle_remove(storage, params),
             Commands::Edit(params) => handle_edit(config, params),
             Commands::Due => handle_due(storage),
@@ -51,31 +52,13 @@ impl Cli {
 enum Commands {
     Add(Add),
     Done(DoneParams),
-    List(ListParams),
+    List(List),
     Remove(RemoveParams),
     Edit(EditParams),
     Due,
     Undone(UndoneParams),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(
-    name = "list",
-    visible_alias = "ls",
-    about = "List all the tasks or those that match the query"
-)]
-struct ListParams {
-    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Option<Vec<String>>,
-
-    #[arg(
-        long,
-        help = "Display all tasks, even the completed ones",
-        default_value_t = false
-    )]
-    all: bool,
 }
 
 #[derive(Parser)]

@@ -6,25 +6,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskList},
 };
 
-use super::{DoneParams, EditParams, ListParams, ModifyParams, RemoveParams, UndoneParams};
-
-pub fn handle_list(storage: TaskStorage, params: ListParams) -> Result<(), TaskError> {
-    let mut tasks = storage.get_all()?;
-    let total = tasks.len();
-
-    if !params.all {
-        tasks.retain(|item| !item.task.completed)
-    }
-
-    if let Some(query) = params.query {
-        let query = TaskQuery::from_string_vec(query)?;
-
-        tasks = tasks.filter_from_query(&query).collect();
-    }
-
-    print_tasks_list(tasks, total);
-    Ok(())
-}
+use super::{DoneParams, EditParams, ModifyParams, RemoveParams, UndoneParams};
 
 pub fn handle_done(storage: TaskStorage, params: DoneParams) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
