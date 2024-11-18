@@ -5,7 +5,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskListVecExt, query::TaskQuery},
 };
 
-use super::handlers::print_tasks_list;
+use super::print_tasks_list;
 
 #[derive(Parser)]
 #[command(

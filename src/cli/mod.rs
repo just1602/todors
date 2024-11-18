@@ -3,7 +3,6 @@ pub mod clean;
 pub mod done;
 pub mod due;
 pub mod edit;
-mod handlers;
 pub mod list;
 pub mod modify;
 pub mod remove;
@@ -24,6 +23,7 @@ use crate::cli::remove::Remove;
 use crate::cli::undone::Undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
+use crate::tasks::list::TaskList;
 
 #[derive(Parser)]
 #[command(
@@ -70,4 +70,17 @@ enum Commands {
     Undone(Undone),
     Clean(Clean),
     Modify(Modify),
+}
+
+pub fn print_tasks_list(tasks: TaskList, total: usize) {
+    // FIXME: find the right way to display colors for completed and prioritized tasks
+    // Maybe the solution is to put the logic in list item
+    let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
+        .try_into()
+        .expect("Failed to parse task list length width");
+    for item in &tasks {
+        println!("{:0width$}) {}", item.idx, item.task, width = width);
+    }
+    println!("⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯");
+    println!("{}/{} tasks where printed", tasks.len(), total);
 }

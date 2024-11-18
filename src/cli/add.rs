@@ -1,10 +1,11 @@
 use clap::Parser;
 
 use crate::{
-    cli::handlers::print_tasks_list,
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListItem, task::TaskBuilder},
 };
+
+use super::print_tasks_list;
 
 #[derive(Parser)]
 #[command(name = "add", visible_alias = "a", about = "Add a task to the list")]
