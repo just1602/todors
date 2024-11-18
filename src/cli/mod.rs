@@ -1,4 +1,5 @@
 pub mod add;
+pub mod done;
 mod handlers;
 pub mod list;
 
@@ -6,10 +7,11 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use handlers::{
-    handle_clean, handle_done, handle_due, handle_edit, handle_modify, handle_remove, handle_undone,
+    handle_clean, handle_due, handle_edit, handle_modify, handle_remove, handle_undone,
 };
 
 use crate::cli::add::Add;
+use crate::cli::done::Done;
 use crate::cli::list::List;
 use crate::config::Config;
 use crate::storage::TaskStorage;
@@ -32,7 +34,7 @@ impl Cli {
     pub fn run(self, config: Config, storage: TaskStorage) {
         let result = match self.command {
             Commands::Add(add) => add.execute(storage),
-            Commands::Done(params) => handle_done(storage, params),
+            Commands::Done(done) => done.execute(storage),
             Commands::List(list) => list.execute(storage),
             Commands::Remove(params) => handle_remove(storage, params),
             Commands::Edit(params) => handle_edit(config, params),
@@ -51,7 +53,7 @@ impl Cli {
 #[derive(Subcommand)]
 enum Commands {
     Add(Add),
-    Done(DoneParams),
+    Done(Done),
     List(List),
     Remove(RemoveParams),
     Edit(EditParams),
@@ -59,17 +61,6 @@ enum Commands {
     Undone(UndoneParams),
     Clean,
     Modify(ModifyParams),
-}
-
-#[derive(Parser)]
-#[command(
-    name = "done",
-    visible_alias = "do",
-    about = "Mark selected tasks as done"
-)]
-struct DoneParams {
-    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
 }
 
 #[derive(Parser)]
