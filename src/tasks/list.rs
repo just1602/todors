@@ -15,6 +15,7 @@ pub trait TaskListTrait {
         &mut self,
         query: &TaskQuery,
     ) -> impl Iterator<Item = &mut TaskListItem>;
+    fn sort_by_urgency(&self) -> TaskList;
 }
 
 impl TaskListTrait for TaskList {
@@ -98,5 +99,25 @@ impl TaskListTrait for TaskList {
 
             false
         })
+    }
+
+    fn sort_by_urgency(&self) -> TaskList {
+        // FIXME: there must be a better way to do this sort
+        let mut pri_tasks: TaskList = self
+            .clone()
+            .into_iter()
+            .filter(|item| item.task.priority.is_some())
+            .collect();
+        pri_tasks.sort_by_key(|item| item.task.priority);
+
+        let mut other_tasks: TaskList = self
+            .clone()
+            .into_iter()
+            .filter(|item| item.task.priority.is_none())
+            .collect();
+
+        other_tasks.sort_by_key(|item| item.idx);
+
+        [pri_tasks, other_tasks].concat()
     }
 }

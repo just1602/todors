@@ -23,7 +23,7 @@ use crate::cli::remove::Remove;
 use crate::cli::undone::Undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
-use crate::tasks::list::TaskList;
+use crate::tasks::list::{TaskList, TaskListTrait};
 
 #[derive(Parser)]
 #[command(
@@ -73,23 +73,7 @@ enum Commands {
 }
 
 pub fn print_tasks_list(tasks: TaskList, total: usize) {
-    // FIXME: there must be a better way to do this sort
-    let mut pri_tasks: TaskList = tasks
-        .clone()
-        .into_iter()
-        .filter(|item| item.task.priority.is_some())
-        .collect();
-    pri_tasks.sort_by_key(|item| item.task.priority);
-
-    let mut other_tasks: TaskList = tasks
-        .clone()
-        .into_iter()
-        .filter(|item| item.task.priority.is_none())
-        .collect();
-
-    other_tasks.sort_by_key(|item| item.idx);
-
-    let tasks = [pri_tasks, other_tasks].concat();
+    let tasks = tasks.sort_by_urgency();
 
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item
