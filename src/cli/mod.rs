@@ -90,10 +90,10 @@ pub fn print_tasks_list(tasks: TaskList, total: usize) {
         let mut line = format!("{:0width$}) {}", item.idx, item.task, width = width);
         if let Some(priority) = item.task.priority {
             line = match priority {
-                'A' => line.red().to_string(),
-                'B' => line.yellow().to_string(),
-                'C' => line.green().to_string(),
-                _ => line.blue().to_string(),
+                'A' => line.magenta().bold().to_string(),
+                'B' => line.yellow().bold().to_string(),
+                'C' => line.green().bold().to_string(),
+                _ => line.blue().bold().to_string(),
             };
         }
         println!("{}", line);
