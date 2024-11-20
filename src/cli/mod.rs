@@ -25,6 +25,8 @@ use crate::config::Config;
 use crate::storage::TaskStorage;
 use crate::tasks::list::{TaskList, TaskListTrait};
 
+use colored::Colorize;
+
 #[derive(Parser)]
 #[command(
     version,
@@ -81,7 +83,16 @@ pub fn print_tasks_list(tasks: TaskList, total: usize) {
         .try_into()
         .expect("Failed to parse task list length width");
     for item in &tasks {
-        println!("{:0width$}) {}", item.idx, item.task, width = width);
+        let mut line = format!("{:0width$}) {}", item.idx, item.task, width = width);
+        if let Some(priority) = item.task.priority {
+            line = match priority {
+                'A' => line.red().to_string(),
+                'B' => line.yellow().to_string(),
+                'C' => line.green().to_string(),
+                _ => line.blue().to_string(),
+            };
+        }
+        println!("{}", line);
     }
     println!("⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯");
     println!("{}/{} tasks where printed", tasks.len(), total);
