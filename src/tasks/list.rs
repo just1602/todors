@@ -9,7 +9,7 @@ pub struct TaskListItem {
 
 pub type TaskList = Vec<TaskListItem>;
 
-pub trait TaskListVecExt {
+pub trait TaskListTrait {
     fn filter_from_query(&self, query: &TaskQuery) -> impl Iterator<Item = TaskListItem>;
     fn filter_mut_from_query(
         &mut self,
@@ -17,7 +17,7 @@ pub trait TaskListVecExt {
     ) -> impl Iterator<Item = &mut TaskListItem>;
 }
 
-impl TaskListVecExt for TaskList {
+impl TaskListTrait for TaskList {
     fn filter_from_query(&self, query: &TaskQuery) -> impl Iterator<Item = TaskListItem> {
         self.iter()
             .filter(|item| {

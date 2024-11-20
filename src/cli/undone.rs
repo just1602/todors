@@ -2,7 +2,7 @@ use clap::Parser;
 
 use crate::{
     storage::TaskStorage,
-    tasks::{error::TaskError, list::TaskListVecExt, query::TaskQuery},
+    tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
 };
 
 #[derive(Parser)]
