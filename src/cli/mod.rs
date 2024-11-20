@@ -1,12 +1,13 @@
 pub mod add;
-pub mod clean;
-pub mod done;
-pub mod due;
-pub mod edit;
-pub mod list;
-pub mod modify;
-pub mod remove;
-pub mod undone;
+mod clean;
+mod done;
+mod due;
+mod edit;
+mod list;
+mod modify;
+mod next;
+mod remove;
+mod undone;
 
 use std::path::PathBuf;
 
@@ -19,6 +20,7 @@ use crate::cli::due::Due;
 use crate::cli::edit::Edit;
 use crate::cli::list::List;
 use crate::cli::modify::Modify;
+use crate::cli::next::Next;
 use crate::cli::remove::Remove;
 use crate::cli::undone::Undone;
 use crate::config::Config;
@@ -53,6 +55,7 @@ impl Cli {
             Commands::Undone(undone) => undone.execute(storage),
             Commands::Clean(clean) => clean.execute(storage),
             Commands::Modify(modify) => modify.execute(storage),
+            Commands::Next(next) => next.execute(storage),
         };
 
         if let Err(e) = result {
@@ -72,6 +75,7 @@ enum Commands {
     Undone(Undone),
     Clean(Clean),
     Modify(Modify),
+    Next(Next),
 }
 
 pub fn print_tasks_list(tasks: TaskList, total: usize) {
