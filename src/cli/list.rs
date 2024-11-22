@@ -35,7 +35,7 @@ impl List {
         }
 
         if let Some(query) = &self.query {
-            let query = TaskQuery::from_string_vec(query.clone())?;
+            let query = TaskQuery::from_string_vec(query)?;
 
             tasks = tasks.filter_from_query(&query).collect();
         }

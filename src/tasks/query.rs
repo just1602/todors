@@ -15,7 +15,7 @@ pub struct TaskQuery {
 }
 
 impl TaskQuery {
-    pub fn from_string_vec(v: Vec<String>) -> Result<TaskQuery, TaskError> {
+    pub fn from_string_vec(v: &[String]) -> Result<TaskQuery, TaskError> {
         let query = v.join(" ");
 
         query.parse()
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn it_can_parse_directly_from_string_vec() {
         let clap_query = vec!["test".to_string(), "team:sre".to_string()];
-        let query = TaskQuery::from_string_vec(clap_query).unwrap();
+        let query = TaskQuery::from_string_vec(&clap_query).unwrap();
 
         assert_eq!(query.subject, "test");
         assert_eq!(

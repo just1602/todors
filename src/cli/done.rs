@@ -20,7 +20,7 @@ pub struct Done {
 impl Done {
     pub fn execute(&self, storage: TaskStorage) -> Result<(), TaskError> {
         let mut tasks = storage.get_all()?;
-        let query = TaskQuery::from_string_vec(self.query.clone())?;
+        let query = TaskQuery::from_string_vec(&self.query)?;
 
         tasks
             .filter_mut_from_query(&query)

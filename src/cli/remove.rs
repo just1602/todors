@@ -19,7 +19,7 @@ pub struct Remove {
 impl Remove {
     pub fn execute(&self, storage: TaskStorage) -> Result<(), TaskError> {
         let tasks = storage.get_all()?;
-        let query = TaskQuery::from_string_vec(self.query.clone())?;
+        let query = TaskQuery::from_string_vec(&self.query)?;
 
         let idx_to_remove: Vec<usize> = tasks
             .filter_from_query(&query)
