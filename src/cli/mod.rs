@@ -78,7 +78,7 @@ enum Commands {
     Next(Next),
 }
 
-pub fn print_tasks_list(tasks: TaskList, total: usize) {
+pub fn print_tasks_list(tasks: &TaskList, total: usize) {
     let tasks = tasks.sort_by_urgency();
 
     // FIXME: find the right way to display colors for completed and prioritized tasks
