@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use clap::Parser;
 
 use crate::{
@@ -15,8 +16,17 @@ pub struct Modify {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
     query: Vec<String>,
 
-    #[arg(long, short, visible_alias = "pri")]
+    #[arg(long, visible_alias = "pri", conflicts_with = "rm_priority")]
     priority: Option<char>,
+
+    #[arg(long, visible_alias = "rm-pri", conflicts_with = "priority")]
+    rm_priority: bool,
+
+    #[arg(long, conflicts_with = "rm_due_date")]
+    due_date: Option<NaiveDate>,
+
+    #[arg(long, conflicts_with = "due_date")]
+    rm_due_date: bool,
 }
 
 impl Modify {
@@ -25,9 +35,42 @@ impl Modify {
         let mut tasks = storage.get_all()?;
         let query = TaskQuery::from_string_vec(&self.query)?;
 
-        tasks
-            .filter_mut_from_query(&query)
-            .for_each(|item| item.task.priority = self.priority);
+        let idx_to_modify: Vec<usize> = tasks
+            .filter_from_query(&query)
+            .map(|item| item.idx)
+            .collect();
+
+        if self.priority.is_some() {
+            tasks.iter_mut().for_each(|item| {
+                if idx_to_modify.contains(&item.idx) {
+                    item.task.priority = self.priority
+                }
+            });
+        }
+
+        if self.rm_priority {
+            tasks.iter_mut().for_each(|item| {
+                if idx_to_modify.contains(&item.idx) {
+                    item.task.priority = None
+                }
+            });
+        }
+
+        if self.due_date.is_some() {
+            tasks.iter_mut().for_each(|item| {
+                if idx_to_modify.contains(&item.idx) {
+                    item.task.due_date = self.due_date
+                }
+            });
+        }
+
+        if self.rm_due_date {
+            tasks.iter_mut().for_each(|item| {
+                if idx_to_modify.contains(&item.idx) {
+                    item.task.due_date = None
+                }
+            });
+        }
 
         storage.perist(tasks)
     }
