@@ -155,8 +155,7 @@ impl FromStr for Task {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
-                // FIXME: switch back to `char::MIN` once rust 1.83.0 land in nixos-unstable
-                ('\0'..=char::MAX, State::Init) => State::TagBegin(i),
+                (char::MIN..=char::MAX, State::Init) => State::TagBegin(i),
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
                 (' ', State::TagBegin(_)) => State::Init,
                 (' ', State::Context(j)) => {
