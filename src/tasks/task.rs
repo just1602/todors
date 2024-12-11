@@ -149,11 +149,13 @@ impl FromStr for Task {
         // Some tag we know about
         let mut due_date = None;
 
-        for (i, c) in buf.chars().enumerate() {
+        // NOTE: we must iter on `buf` that way to support non-ascii chars
+        let mut iter = buf.char_indices();
+        while let Some((i, c)) = iter.next() {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
-                ('A'..='z', State::Init) => State::TagBegin(i),
+                (char::MIN..=char::MAX, State::Init) => State::TagBegin(i),
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
                 (' ', State::TagBegin(_)) => State::Init,
                 (' ', State::Context(j)) => {
@@ -403,6 +405,25 @@ mod tests {
             task,
             Task {
                 subject: "small".to_string(),
+                ..Task::default()
+            }
+        )
+    }
+
+    #[test]
+    fn it_parses_task_with_french_accent_correctly() {
+        let line = "2024-05-01 écrire une tâche avec des accents due:2024-06-01";
+        let task = line.parse::<Task>().unwrap();
+
+        assert_eq!(
+            task,
+            Task {
+                subject: "écrire une tâche avec des accents".to_string(),
+                created_at: NaiveDate::from_ymd_opt(2024, 5, 1),
+                projects: vec![],
+                contexts: vec![],
+                due_date: NaiveDate::from_ymd_opt(2024, 6, 1),
+                tags: HashMap::from([]),
                 ..Task::default()
             }
         )
