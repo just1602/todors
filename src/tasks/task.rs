@@ -150,8 +150,8 @@ impl FromStr for Task {
         let mut due_date = None;
 
         // NOTE: we must iter on `buf` that way to support non-ascii chars
-        let mut iter = buf.char_indices();
-        while let Some((i, c)) = iter.next() {
+        let buf_iter = buf.char_indices();
+        for (i, c) in buf_iter {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
