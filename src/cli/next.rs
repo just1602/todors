@@ -31,7 +31,7 @@ impl Next {
         if let Some(task) = tasks.sort_by_urgency().first() {
             // FIXME: remove this clone
             // TODO: check if this function can take a slice instead
-            print_tasks_list(&vec![task.clone()], total);
+            print_tasks_list(&vec![task.clone()], total)?;
         }
 
         Ok(())

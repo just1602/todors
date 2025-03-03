@@ -31,7 +31,7 @@ impl Done {
 
         let completed_tasks: TaskList = tasks.filter_from_query(&query).collect();
 
-        print_tasks_list(&completed_tasks, total);
+        print_tasks_list(&completed_tasks, total)?;
 
         storage.perist(tasks)
     }

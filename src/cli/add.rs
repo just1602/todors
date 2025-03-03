@@ -38,7 +38,7 @@ impl Add {
         // FIXME: implement copy for `Task` and `TaskListItem`
         tasks.push(item.clone());
 
-        print_tasks_list(&vec![item], tasks.len());
+        print_tasks_list(&vec![item], tasks.len())?;
 
         storage.perist(tasks)
     }

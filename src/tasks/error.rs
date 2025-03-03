@@ -7,6 +7,7 @@ pub enum TaskError {
     FailedToParseQuery,
     FailedToSave,
     FailedToOpenTodoFile,
+    FailedToWriteToStdout,
 }
 
 impl Display for TaskError {
@@ -17,6 +18,7 @@ impl Display for TaskError {
             TaskError::FailedToParseQuery => f.write_str("Failed to parse the query"),
             TaskError::FailedToSave => f.write_str("Failed to save a task"),
             TaskError::FailedToOpenTodoFile => f.write_str("Failed to open todo.txt file"),
+            TaskError::FailedToWriteToStdout => f.write_str("Failed to write to stdout"),
         }
     }
 }

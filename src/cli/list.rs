@@ -40,7 +40,7 @@ impl List {
             tasks = tasks.filter_from_query(&query).collect();
         }
 
-        print_tasks_list(&tasks, total);
+        print_tasks_list(&tasks, total)?;
         Ok(())
     }
 }

@@ -21,7 +21,7 @@ impl Due {
         tasks.retain(|item| !item.task.completed && item.task.due_date.is_some());
         tasks.sort_by_key(|item| item.task.due_date);
 
-        print_tasks_list(&tasks, total);
+        print_tasks_list(&tasks, total)?;
 
         Ok(())
     }

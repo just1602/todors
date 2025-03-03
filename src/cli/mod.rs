@@ -9,6 +9,8 @@ mod next;
 mod remove;
 mod undone;
 
+use std::io;
+use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
@@ -25,6 +27,7 @@ use crate::cli::remove::Remove;
 use crate::cli::undone::Undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
+use crate::tasks::error::TaskError;
 use crate::tasks::list::{TaskList, TaskListTrait};
 
 use colored::Colorize;
@@ -78,8 +81,11 @@ enum Commands {
     Next(Next),
 }
 
-pub fn print_tasks_list(tasks: &TaskList, total: usize) {
+pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError> {
     let tasks = tasks.sort_by_urgency();
+
+    let stdout = io::stdout();
+    let mut handle = io::BufWriter::new(stdout);
 
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item
@@ -96,8 +102,26 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) {
                 _ => line.blue().bold().to_string(),
             };
         }
-        println!("{}", line);
+        match writeln!(handle, "{}", line) {
+            Ok(_) => {}
+            Err(err) => {
+                eprint!("Failed to write tasks list to stdout: {}", err);
+                return Err(TaskError::FailedToWriteToStdout);
+            }
+        }
     }
-    println!("⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯");
-    println!("{}/{} tasks where printed", tasks.len(), total);
+    match writeln!(
+        handle,
+        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n{}/{} tasks where printed",
+        tasks.len(),
+        total
+    ) {
+        Ok(_) => {}
+        Err(err) => {
+            eprint!("Failed to write tasks list to stdout: {}", err);
+            return Err(TaskError::FailedToWriteToStdout);
+        }
+    }
+
+    Ok(())
 }
