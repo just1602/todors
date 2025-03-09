@@ -5,7 +5,7 @@ use crate::{
     tasks::{error::TaskError, list::TaskListItem, task::TaskBuilder},
 };
 
-use super::print_tasks_list;
+use crate::utils::print_tasks_list;
 
 #[derive(Parser)]
 #[command(name = "add", visible_alias = "a", about = "Add a task to the list")]

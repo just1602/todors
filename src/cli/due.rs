@@ -2,7 +2,7 @@ use clap::Parser;
 
 use crate::{storage::TaskStorage, tasks::error::TaskError};
 
-use super::print_tasks_list;
+use crate::utils::print_tasks_list;
 
 #[derive(Parser)]
 #[command(name = "due", about = "List all due tasks")]
