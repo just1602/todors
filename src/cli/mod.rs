@@ -22,7 +22,7 @@ use crate::cli::list::handle_list;
 use crate::cli::modify::Modify;
 use crate::cli::next::Next;
 use crate::cli::remove::handle_remove;
-use crate::cli::undone::Undone;
+use crate::cli::undone::handle_undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
 
@@ -49,7 +49,7 @@ impl Cli {
             Commands::Remove(params) => handle_remove(params, storage),
             Commands::Edit(params) => handle_edit(params, config),
             Commands::Due(params) => handle_due(params, storage),
-            Commands::Undone(undone) => undone.execute(storage),
+            Commands::Undone(params) => handle_undone(params, storage),
             Commands::Clean(clean) => clean.execute(storage),
             Commands::Modify(modify) => modify.execute(storage),
             Commands::Next(next) => next.execute(storage),
@@ -140,3 +140,14 @@ pub struct Edit {
 #[derive(Parser)]
 #[command(name = "due", about = "List all due tasks")]
 pub struct Due;
+
+#[derive(Parser)]
+#[command(
+    name = "undone",
+    visible_alias = "undo",
+    about = "Mark selected tasks as not done"
+)]
+pub struct Undone {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Vec<String>,
+}
