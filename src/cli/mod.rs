@@ -16,7 +16,7 @@ use clap::{Parser, Subcommand};
 use crate::cli::add::handle_add;
 use crate::cli::clean::Clean;
 use crate::cli::done::handle_done;
-use crate::cli::due::Due;
+use crate::cli::due::handle_due;
 use crate::cli::edit::handle_edit;
 use crate::cli::list::handle_list;
 use crate::cli::modify::Modify;
@@ -48,7 +48,7 @@ impl Cli {
             Commands::List(params) => handle_list(params, storage),
             Commands::Remove(params) => handle_remove(params, storage),
             Commands::Edit(params) => handle_edit(params, config),
-            Commands::Due(due) => due.execute(storage),
+            Commands::Due(params) => handle_due(params, storage),
             Commands::Undone(undone) => undone.execute(storage),
             Commands::Clean(clean) => clean.execute(storage),
             Commands::Modify(modify) => modify.execute(storage),
@@ -136,3 +136,7 @@ pub struct Remove {
 pub struct Edit {
     item: Option<u32>,
 }
+
+#[derive(Parser)]
+#[command(name = "due", about = "List all due tasks")]
+pub struct Due;
