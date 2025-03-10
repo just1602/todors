@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 use crate::cli::add::handle_add;
-use crate::cli::clean::Clean;
+use crate::cli::clean::handle_clean;
 use crate::cli::done::handle_done;
 use crate::cli::due::handle_due;
 use crate::cli::edit::handle_edit;
@@ -50,7 +50,7 @@ impl Cli {
             Commands::Edit(params) => handle_edit(params, config),
             Commands::Due(params) => handle_due(params, storage),
             Commands::Undone(params) => handle_undone(params, storage),
-            Commands::Clean(clean) => clean.execute(storage),
+            Commands::Clean(params) => handle_clean(params, storage),
             Commands::Modify(modify) => modify.execute(storage),
             Commands::Next(next) => next.execute(storage),
         };
@@ -151,3 +151,7 @@ pub struct Undone {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
     query: Vec<String>,
 }
+
+#[derive(Parser)]
+#[command(name = "clean", about = "Clean all the completed tasks")]
+pub struct Clean;
