@@ -21,7 +21,7 @@ use crate::cli::due::handle_due;
 use crate::cli::edit::handle_edit;
 use crate::cli::list::handle_list;
 use crate::cli::modify::handle_modify;
-use crate::cli::next::Next;
+use crate::cli::next::handle_next;
 use crate::cli::remove::handle_remove;
 use crate::cli::undone::handle_undone;
 use crate::config::Config;
@@ -53,7 +53,7 @@ impl Cli {
             Commands::Undone(params) => handle_undone(params, storage),
             Commands::Clean(params) => handle_clean(params, storage),
             Commands::Modify(params) => handle_modify(params, storage),
-            Commands::Next(next) => next.execute(storage),
+            Commands::Next(params) => handle_next(params, storage),
         };
 
         if let Err(e) = result {
@@ -178,4 +178,14 @@ pub struct Modify {
 
     #[arg(long, conflicts_with = "due_date")]
     rm_due_date: bool,
+}
+
+#[derive(Parser)]
+#[command(
+    name = "next",
+    about = "Show the next task to do base on the urgency task sort we have"
+)]
+pub struct Next {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Option<Vec<String>>,
 }
