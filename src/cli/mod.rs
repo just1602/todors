@@ -21,7 +21,7 @@ use crate::cli::edit::Edit;
 use crate::cli::list::handle_list;
 use crate::cli::modify::Modify;
 use crate::cli::next::Next;
-use crate::cli::remove::Remove;
+use crate::cli::remove::handle_remove;
 use crate::cli::undone::Undone;
 use crate::config::Config;
 use crate::storage::TaskStorage;
@@ -46,7 +46,7 @@ impl Cli {
             Commands::Add(params) => handle_add(params, storage),
             Commands::Done(params) => handle_done(params, storage),
             Commands::List(params) => handle_list(params, storage),
-            Commands::Remove(remove) => remove.execute(storage),
+            Commands::Remove(params) => handle_remove(params, storage),
             Commands::Edit(edit) => edit.execute(config),
             Commands::Due(due) => due.execute(storage),
             Commands::Undone(undone) => undone.execute(storage),
@@ -118,4 +118,15 @@ pub struct List {
         default_value_t = false
     )]
     all: bool,
+}
+
+#[derive(Parser)]
+#[command(
+    name = "remove",
+    visible_alias = "rm",
+    about = "Remove selected item from the todo file"
+)]
+pub struct Remove {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Vec<String>,
 }
