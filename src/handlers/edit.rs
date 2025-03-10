@@ -1,6 +1,4 @@
-use crate::{config::Config, tasks::error::TaskError};
-
-use super::Edit;
+use crate::{cli::Edit, config::Config, tasks::error::TaskError};
 
 pub fn handle_edit(params: Edit, config: Config) -> Result<(), TaskError> {
     let editor = match std::env::var("EDITOR") {

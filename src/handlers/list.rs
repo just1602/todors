@@ -1,15 +1,18 @@
 use crate::{
+    cli::List,
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
 };
 
 use crate::utils::print_tasks_list;
 
-use super::Next;
-
-pub fn handle_next(params: Next, storage: TaskStorage) -> Result<(), TaskError> {
+pub fn handle_list(params: List, storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;
     let total = tasks.len();
+
+    if !params.all {
+        tasks.retain(|item| !item.task.completed)
+    }
 
     if let Some(query) = &params.query {
         let query = TaskQuery::from_string_vec(query)?;
@@ -17,11 +20,6 @@ pub fn handle_next(params: Next, storage: TaskStorage) -> Result<(), TaskError> 
         tasks = tasks.filter_from_query(&query).collect();
     }
 
-    if let Some(task) = tasks.sort_by_urgency().first() {
-        // FIXME: remove this clone
-        // TODO: check if this function can take a slice instead
-        print_tasks_list(&vec![task.clone()], total)?;
-    }
-
+    print_tasks_list(&tasks, total)?;
     Ok(())
 }

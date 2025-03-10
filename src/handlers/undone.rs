@@ -1,9 +1,8 @@
 use crate::{
+    cli::Undone,
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
 };
-
-use super::Undone;
 
 pub fn handle_undone(params: Undone, storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;

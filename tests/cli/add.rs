@@ -1,5 +1,5 @@
 use todors::cli::Add;
-use todors::cli::add::handle_add;
+use todors::handlers::handle_add;
 use todors::storage::TaskStorage;
 
 #[test]

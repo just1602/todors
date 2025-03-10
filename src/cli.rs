@@ -1,30 +1,10 @@
-pub mod add;
-mod clean;
-mod done;
-mod due;
-mod edit;
-mod list;
-mod modify;
-mod next;
-mod remove;
-mod undone;
-
 use std::path::PathBuf;
 
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 
-use crate::cli::add::handle_add;
-use crate::cli::clean::handle_clean;
-use crate::cli::done::handle_done;
-use crate::cli::due::handle_due;
-use crate::cli::edit::handle_edit;
-use crate::cli::list::handle_list;
-use crate::cli::modify::handle_modify;
-use crate::cli::next::handle_next;
-use crate::cli::remove::handle_remove;
-use crate::cli::undone::handle_undone;
 use crate::config::Config;
+use crate::handlers::*;
 use crate::storage::TaskStorage;
 
 #[derive(Parser)]
@@ -80,10 +60,10 @@ enum Commands {
 #[command(name = "add", visible_alias = "a", about = "Add a task to the list")]
 pub struct Add {
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    task: Vec<String>,
+    pub task: Vec<String>,
 
     #[arg(long, help = "Set the priority directly after creating the task")]
-    pri: Option<char>,
+    pub pri: Option<char>,
 }
 
 impl Add {
@@ -100,7 +80,7 @@ impl Add {
 )]
 pub struct Done {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
+    pub query: Vec<String>,
 }
 
 #[derive(Parser)]
@@ -111,14 +91,14 @@ pub struct Done {
 )]
 pub struct List {
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Option<Vec<String>>,
+    pub query: Option<Vec<String>>,
 
     #[arg(
         long,
         help = "Display all tasks, even the completed ones",
         default_value_t = false
     )]
-    all: bool,
+    pub all: bool,
 }
 
 #[derive(Parser)]
@@ -129,13 +109,13 @@ pub struct List {
 )]
 pub struct Remove {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
+    pub query: Vec<String>,
 }
 
 #[derive(Parser)]
 #[command(name = "edit", about = "Edit the todo file with a text editor")]
 pub struct Edit {
-    item: Option<u32>,
+    pub item: Option<u32>,
 }
 
 #[derive(Parser)]
@@ -150,7 +130,7 @@ pub struct Due;
 )]
 pub struct Undone {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
+    pub query: Vec<String>,
 }
 
 #[derive(Parser)]
@@ -165,19 +145,19 @@ pub struct Clean;
 )]
 pub struct Modify {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Vec<String>,
+    pub query: Vec<String>,
 
     #[arg(long, visible_alias = "pri", conflicts_with = "rm_priority")]
-    priority: Option<char>,
+    pub priority: Option<char>,
 
     #[arg(long, visible_alias = "rm-pri", conflicts_with = "priority")]
-    rm_priority: bool,
+    pub rm_priority: bool,
 
     #[arg(long, conflicts_with = "rm_due_date")]
-    due_date: Option<NaiveDate>,
+    pub due_date: Option<NaiveDate>,
 
     #[arg(long, conflicts_with = "due_date")]
-    rm_due_date: bool,
+    pub rm_due_date: bool,
 }
 
 #[derive(Parser)]
@@ -187,5 +167,5 @@ pub struct Modify {
 )]
 pub struct Next {
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    query: Option<Vec<String>>,
+    pub query: Option<Vec<String>>,
 }

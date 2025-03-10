@@ -1,8 +1,7 @@
+use crate::cli::Due;
 use crate::{storage::TaskStorage, tasks::error::TaskError};
 
 use crate::utils::print_tasks_list;
-
-use super::Due;
 
 // TODO: a query or an argument to list tasks due today, tomorrow, this week, next week, this
 // month, next month

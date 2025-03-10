@@ -3,9 +3,8 @@ use crate::{
     tasks::{error::TaskError, list::TaskListItem, task::TaskBuilder},
 };
 
+use crate::cli::Add;
 use crate::utils::print_tasks_list;
-
-use super::Add;
 
 pub fn handle_add(params: Add, storage: TaskStorage) -> Result<(), TaskError> {
     let task = TaskBuilder::new(params.task.join(" "))

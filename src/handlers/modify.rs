@@ -1,9 +1,8 @@
 use crate::{
+    cli::Modify,
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
 };
-
-use super::Modify;
 
 // TODO: https://github.com/just1602/todors/issues/5
 pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<(), TaskError> {

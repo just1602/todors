@@ -1,3 +1,4 @@
+use crate::cli::Done;
 use crate::tasks::list::{TaskList, TaskListTrait};
 
 use crate::{
@@ -6,8 +7,6 @@ use crate::{
 };
 
 use crate::utils::print_tasks_list;
-
-use super::Done;
 
 pub fn handle_done(params: Done, storage: TaskStorage) -> Result<(), TaskError> {
     let mut tasks = storage.get_all()?;

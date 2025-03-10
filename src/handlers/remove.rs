@@ -1,9 +1,8 @@
 use crate::{
+    cli::Remove,
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
 };
-
-use super::Remove;
 
 pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<(), TaskError> {
     let tasks = storage.get_all()?;
