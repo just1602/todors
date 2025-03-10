@@ -3,10 +3,6 @@ use std::path::PathBuf;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 
-use crate::config::Config;
-use crate::handlers::*;
-use crate::storage::TaskStorage;
-
 #[derive(Parser)]
 #[command(
     version,
@@ -18,32 +14,11 @@ pub struct Cli {
     pub config_path: Option<PathBuf>,
 
     #[command(subcommand)]
-    command: Commands,
-}
-
-impl Cli {
-    pub fn run(self, config: Config, storage: TaskStorage) {
-        let result = match self.command {
-            Commands::Add(params) => handle_add(params, storage),
-            Commands::Done(params) => handle_done(params, storage),
-            Commands::List(params) => handle_list(params, storage),
-            Commands::Remove(params) => handle_remove(params, storage),
-            Commands::Edit(params) => handle_edit(params, config),
-            Commands::Due(params) => handle_due(params, storage),
-            Commands::Undone(params) => handle_undone(params, storage),
-            Commands::Clean(params) => handle_clean(params, storage),
-            Commands::Modify(params) => handle_modify(params, storage),
-            Commands::Next(params) => handle_next(params, storage),
-        };
-
-        if let Err(e) = result {
-            eprintln!("An error occured: {}", e);
-        }
-    }
+    pub command: Commands,
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     Add(Add),
     Done(Done),
     List(List),

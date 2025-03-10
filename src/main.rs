@@ -1,6 +1,11 @@
 use clap::Parser;
 use std::path::PathBuf;
-use todors::{cli::Cli, config::Config, storage::TaskStorage};
+use todors::{
+    cli::{Cli, Commands},
+    config::Config,
+    handlers::*,
+    storage::TaskStorage,
+};
 
 fn main() {
     let cli = Cli::parse();
@@ -19,5 +24,20 @@ fn main() {
     let config = Config::from_path(config_file_path);
     let storage = TaskStorage::new(config.todo_file());
 
-    cli.run(config, storage)
+    let result = match cli.command {
+        Commands::Add(params) => handle_add(params, storage),
+        Commands::Done(params) => handle_done(params, storage),
+        Commands::List(params) => handle_list(params, storage),
+        Commands::Remove(params) => handle_remove(params, storage),
+        Commands::Edit(params) => handle_edit(params, config),
+        Commands::Due(params) => handle_due(params, storage),
+        Commands::Undone(params) => handle_undone(params, storage),
+        Commands::Clean(params) => handle_clean(params, storage),
+        Commands::Modify(params) => handle_modify(params, storage),
+        Commands::Next(params) => handle_next(params, storage),
+    };
+
+    if let Err(e) = result {
+        eprintln!("An error occured: {}", e);
+    }
 }

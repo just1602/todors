@@ -1,0 +1,374 @@
+#compdef todors
+
+autoload -U is-at-least
+
+_todors() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'-c+[Path to the config file.]:CONFIG_PATH:_files' \
+'--config=[Path to the config file.]:CONFIG_PATH:_files' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+":: :_todors_commands" \
+"*::: :->todors" \
+&& ret=0
+    case $state in
+    (todors)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:todors-command-$line[1]:"
+        case $line[1] in
+            (add)
+_arguments "${_arguments_options[@]}" : \
+'--pri=[Set the priority directly after creating the task]:PRI:_default' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::task:_default' \
+&& ret=0
+;;
+(a)
+_arguments "${_arguments_options[@]}" : \
+'--pri=[Set the priority directly after creating the task]:PRI:_default' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::task:_default' \
+&& ret=0
+;;
+(done)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(do)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(list)
+_arguments "${_arguments_options[@]}" : \
+'--all[Display all tasks, even the completed ones]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(ls)
+_arguments "${_arguments_options[@]}" : \
+'--all[Display all tasks, even the completed ones]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(rm)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'::item:_default' \
+&& ret=0
+;;
+(due)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(undone)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(undo)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(clean)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(modify)
+_arguments "${_arguments_options[@]}" : \
+'(--rm-priority)--priority=[]:PRIORITY:_default' \
+'(--rm-priority)--pri=[]:PRIORITY:_default' \
+'(--rm-due-date)--due-date=[]:DUE_DATE:_default' \
+'(--priority)--rm-priority[]' \
+'(--priority)--rm-pri[]' \
+'(--due-date)--rm-due-date[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(mod)
+_arguments "${_arguments_options[@]}" : \
+'(--rm-priority)--priority=[]:PRIORITY:_default' \
+'(--rm-priority)--pri=[]:PRIORITY:_default' \
+'(--rm-due-date)--due-date=[]:DUE_DATE:_default' \
+'(--priority)--rm-priority[]' \
+'(--priority)--rm-pri[]' \
+'(--due-date)--rm-due-date[]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(next)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::query:_default' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_todors__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:todors-help-command-$line[1]:"
+        case $line[1] in
+            (add)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(done)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(list)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(remove)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(due)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(undone)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(clean)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(modify)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(next)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_todors_commands] )) ||
+_todors_commands() {
+    local commands; commands=(
+'add:Add a task to the list' \
+'a:Add a task to the list' \
+'done:Mark selected tasks as done' \
+'do:Mark selected tasks as done' \
+'list:List all the tasks or those that match the query' \
+'ls:List all the tasks or those that match the query' \
+'remove:Remove selected item from the todo file' \
+'rm:Remove selected item from the todo file' \
+'edit:Edit the todo file with a text editor' \
+'due:List all due tasks' \
+'undone:Mark selected tasks as not done' \
+'undo:Mark selected tasks as not done' \
+'clean:Clean all the completed tasks' \
+'modify:Modify selected tasks as desired' \
+'mod:Modify selected tasks as desired' \
+'next:Show the next task to do base on the urgency task sort we have' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'todors commands' commands "$@"
+}
+(( $+functions[_todors__add_commands] )) ||
+_todors__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors add commands' commands "$@"
+}
+(( $+functions[_todors__clean_commands] )) ||
+_todors__clean_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors clean commands' commands "$@"
+}
+(( $+functions[_todors__done_commands] )) ||
+_todors__done_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors done commands' commands "$@"
+}
+(( $+functions[_todors__due_commands] )) ||
+_todors__due_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors due commands' commands "$@"
+}
+(( $+functions[_todors__edit_commands] )) ||
+_todors__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors edit commands' commands "$@"
+}
+(( $+functions[_todors__help_commands] )) ||
+_todors__help_commands() {
+    local commands; commands=(
+'add:Add a task to the list' \
+'done:Mark selected tasks as done' \
+'list:List all the tasks or those that match the query' \
+'remove:Remove selected item from the todo file' \
+'edit:Edit the todo file with a text editor' \
+'due:List all due tasks' \
+'undone:Mark selected tasks as not done' \
+'clean:Clean all the completed tasks' \
+'modify:Modify selected tasks as desired' \
+'next:Show the next task to do base on the urgency task sort we have' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'todors help commands' commands "$@"
+}
+(( $+functions[_todors__help__add_commands] )) ||
+_todors__help__add_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help add commands' commands "$@"
+}
+(( $+functions[_todors__help__clean_commands] )) ||
+_todors__help__clean_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help clean commands' commands "$@"
+}
+(( $+functions[_todors__help__done_commands] )) ||
+_todors__help__done_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help done commands' commands "$@"
+}
+(( $+functions[_todors__help__due_commands] )) ||
+_todors__help__due_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help due commands' commands "$@"
+}
+(( $+functions[_todors__help__edit_commands] )) ||
+_todors__help__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help edit commands' commands "$@"
+}
+(( $+functions[_todors__help__help_commands] )) ||
+_todors__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help help commands' commands "$@"
+}
+(( $+functions[_todors__help__list_commands] )) ||
+_todors__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help list commands' commands "$@"
+}
+(( $+functions[_todors__help__modify_commands] )) ||
+_todors__help__modify_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help modify commands' commands "$@"
+}
+(( $+functions[_todors__help__next_commands] )) ||
+_todors__help__next_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help next commands' commands "$@"
+}
+(( $+functions[_todors__help__remove_commands] )) ||
+_todors__help__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help remove commands' commands "$@"
+}
+(( $+functions[_todors__help__undone_commands] )) ||
+_todors__help__undone_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors help undone commands' commands "$@"
+}
+(( $+functions[_todors__list_commands] )) ||
+_todors__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors list commands' commands "$@"
+}
+(( $+functions[_todors__modify_commands] )) ||
+_todors__modify_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors modify commands' commands "$@"
+}
+(( $+functions[_todors__next_commands] )) ||
+_todors__next_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors next commands' commands "$@"
+}
+(( $+functions[_todors__remove_commands] )) ||
+_todors__remove_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors remove commands' commands "$@"
+}
+(( $+functions[_todors__undone_commands] )) ||
+_todors__undone_commands() {
+    local commands; commands=()
+    _describe -t commands 'todors undone commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_todors" ]; then
+    _todors "$@"
+else
+    compdef _todors todors
+fi
