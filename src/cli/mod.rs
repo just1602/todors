@@ -18,7 +18,7 @@ use crate::cli::clean::Clean;
 use crate::cli::done::handle_done;
 use crate::cli::due::Due;
 use crate::cli::edit::Edit;
-use crate::cli::list::List;
+use crate::cli::list::handle_list;
 use crate::cli::modify::Modify;
 use crate::cli::next::Next;
 use crate::cli::remove::Remove;
@@ -45,7 +45,7 @@ impl Cli {
         let result = match self.command {
             Commands::Add(params) => handle_add(params, storage),
             Commands::Done(params) => handle_done(params, storage),
-            Commands::List(list) => list.execute(storage),
+            Commands::List(params) => handle_list(params, storage),
             Commands::Remove(remove) => remove.execute(storage),
             Commands::Edit(edit) => edit.execute(config),
             Commands::Due(due) => due.execute(storage),
@@ -100,4 +100,22 @@ impl Add {
 pub struct Done {
     #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
     query: Vec<String>,
+}
+
+#[derive(Parser)]
+#[command(
+    name = "list",
+    visible_alias = "ls",
+    about = "List all the tasks or those that match the query"
+)]
+pub struct List {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Option<Vec<String>>,
+
+    #[arg(
+        long,
+        help = "Display all tasks, even the completed ones",
+        default_value_t = false
+    )]
+    all: bool,
 }
