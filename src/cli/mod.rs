@@ -15,7 +15,7 @@ use clap::{Parser, Subcommand};
 
 use crate::cli::add::handle_add;
 use crate::cli::clean::Clean;
-use crate::cli::done::Done;
+use crate::cli::done::handle_done;
 use crate::cli::due::Due;
 use crate::cli::edit::Edit;
 use crate::cli::list::List;
@@ -44,7 +44,7 @@ impl Cli {
     pub fn run(self, config: Config, storage: TaskStorage) {
         let result = match self.command {
             Commands::Add(params) => handle_add(params, storage),
-            Commands::Done(done) => done.execute(storage),
+            Commands::Done(params) => handle_done(params, storage),
             Commands::List(list) => list.execute(storage),
             Commands::Remove(remove) => remove.execute(storage),
             Commands::Edit(edit) => edit.execute(config),
@@ -89,4 +89,15 @@ impl Add {
     pub fn new(task: Vec<String>, pri: Option<char>) -> Self {
         Self { task, pri }
     }
+}
+
+#[derive(Parser)]
+#[command(
+    name = "done",
+    visible_alias = "do",
+    about = "Mark selected tasks as done"
+)]
+pub struct Done {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Vec<String>,
 }
