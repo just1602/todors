@@ -1,5 +1,3 @@
-use clap::Parser;
-
 use crate::{
     storage::TaskStorage,
     tasks::{error::TaskError, list::TaskListItem, task::TaskBuilder},
@@ -7,39 +5,25 @@ use crate::{
 
 use crate::utils::print_tasks_list;
 
-#[derive(Parser)]
-#[command(name = "add", visible_alias = "a", about = "Add a task to the list")]
-pub struct Add {
-    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-    task: Vec<String>,
+use super::Add;
 
-    #[arg(long, help = "Set the priority directly after creating the task")]
-    pri: Option<char>,
-}
+pub fn handle_add(params: Add, storage: TaskStorage) -> Result<(), TaskError> {
+    let task = TaskBuilder::new(params.task.join(" "))
+        .priority(params.pri)
+        .build()?;
 
-impl Add {
-    pub fn new(task: Vec<String>, pri: Option<char>) -> Self {
-        Add { task, pri }
-    }
+    let mut tasks = storage.get_all()?;
 
-    pub fn execute(self, storage: TaskStorage) -> Result<(), TaskError> {
-        let task = TaskBuilder::new(self.task.join(" "))
-            .priority(self.pri)
-            .build()?;
+    let item = TaskListItem {
+        idx: tasks.len() + 1,
+        task: task.clone(),
+    };
 
-        let mut tasks = storage.get_all()?;
+    // NOTE: maybe I should just have keep the writing code inline
+    // FIXME: implement copy for `Task` and `TaskListItem`
+    tasks.push(item.clone());
 
-        let item = TaskListItem {
-            idx: tasks.len() + 1,
-            task: task.clone(),
-        };
+    print_tasks_list(&vec![item], tasks.len())?;
 
-        // NOTE: maybe I should just have keep the writing code inline
-        // FIXME: implement copy for `Task` and `TaskListItem`
-        tasks.push(item.clone());
-
-        print_tasks_list(&vec![item], tasks.len())?;
-
-        storage.perist(tasks)
-    }
+    storage.perist(tasks)
 }

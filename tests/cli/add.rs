@@ -1,4 +1,5 @@
-use todors::cli::add::Add;
+use todors::cli::Add;
+use todors::cli::add::handle_add;
 use todors::storage::TaskStorage;
 
 #[test]
@@ -9,7 +10,7 @@ fn it_add_the_new_task() {
 
     let storage = TaskStorage::new(todo_file_name.clone());
 
-    let cmd = Add::new(
+    let params = Add::new(
         vec![
             "this".to_string(),
             "is".to_string(),
@@ -18,7 +19,8 @@ fn it_add_the_new_task() {
         ],
         None,
     );
-    cmd.execute(storage).unwrap();
+
+    handle_add(params, storage).unwrap();
 
     let result_file = std::fs::read_to_string(todo_file_name).unwrap();
 
@@ -33,7 +35,7 @@ fn it_add_the_new_task_with_priority_pass_as_arg() {
 
     let storage = TaskStorage::new(todo_file_name.clone());
 
-    let cmd = Add::new(
+    let params = Add::new(
         vec![
             "this".to_string(),
             "is".to_string(),
@@ -42,7 +44,8 @@ fn it_add_the_new_task_with_priority_pass_as_arg() {
         ],
         Some('A'),
     );
-    cmd.execute(storage).unwrap();
+
+    handle_add(params, storage).unwrap();
 
     let result_file = std::fs::read_to_string(todo_file_name).unwrap();
 

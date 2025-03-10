@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-use crate::cli::add::Add;
+use crate::cli::add::handle_add;
 use crate::cli::clean::Clean;
 use crate::cli::done::Done;
 use crate::cli::due::Due;
@@ -43,7 +43,7 @@ pub struct Cli {
 impl Cli {
     pub fn run(self, config: Config, storage: TaskStorage) {
         let result = match self.command {
-            Commands::Add(add) => add.execute(storage),
+            Commands::Add(params) => handle_add(params, storage),
             Commands::Done(done) => done.execute(storage),
             Commands::List(list) => list.execute(storage),
             Commands::Remove(remove) => remove.execute(storage),
@@ -73,4 +73,20 @@ enum Commands {
     Clean(Clean),
     Modify(Modify),
     Next(Next),
+}
+
+#[derive(Parser)]
+#[command(name = "add", visible_alias = "a", about = "Add a task to the list")]
+pub struct Add {
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    task: Vec<String>,
+
+    #[arg(long, help = "Set the priority directly after creating the task")]
+    pri: Option<char>,
+}
+
+impl Add {
+    pub fn new(task: Vec<String>, pri: Option<char>) -> Self {
+        Self { task, pri }
+    }
 }
