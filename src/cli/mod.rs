@@ -11,6 +11,7 @@ mod undone;
 
 use std::path::PathBuf;
 
+use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 
 use crate::cli::add::handle_add;
@@ -19,7 +20,7 @@ use crate::cli::done::handle_done;
 use crate::cli::due::handle_due;
 use crate::cli::edit::handle_edit;
 use crate::cli::list::handle_list;
-use crate::cli::modify::Modify;
+use crate::cli::modify::handle_modify;
 use crate::cli::next::Next;
 use crate::cli::remove::handle_remove;
 use crate::cli::undone::handle_undone;
@@ -51,7 +52,7 @@ impl Cli {
             Commands::Due(params) => handle_due(params, storage),
             Commands::Undone(params) => handle_undone(params, storage),
             Commands::Clean(params) => handle_clean(params, storage),
-            Commands::Modify(modify) => modify.execute(storage),
+            Commands::Modify(params) => handle_modify(params, storage),
             Commands::Next(next) => next.execute(storage),
         };
 
@@ -155,3 +156,26 @@ pub struct Undone {
 #[derive(Parser)]
 #[command(name = "clean", about = "Clean all the completed tasks")]
 pub struct Clean;
+
+#[derive(Parser)]
+#[command(
+    name = "modify",
+    visible_alias = "mod",
+    about = "Modify selected tasks as desired"
+)]
+pub struct Modify {
+    #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]
+    query: Vec<String>,
+
+    #[arg(long, visible_alias = "pri", conflicts_with = "rm_priority")]
+    priority: Option<char>,
+
+    #[arg(long, visible_alias = "rm-pri", conflicts_with = "priority")]
+    rm_priority: bool,
+
+    #[arg(long, conflicts_with = "rm_due_date")]
+    due_date: Option<NaiveDate>,
+
+    #[arg(long, conflicts_with = "due_date")]
+    rm_due_date: bool,
+}
