@@ -15,7 +15,7 @@ toml = "0.8.20"
 colored = "3"
 
 [dev-dependencies]
-tempfile = "3.18"
+tempfile = "3.19"
 
 # Dependencies to generate shells complication
 [build-dependencies]
