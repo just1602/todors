@@ -2,7 +2,7 @@
   description = "A todo CLI app that use the todo.txt format under the hood";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
