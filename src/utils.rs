@@ -1,12 +1,10 @@
 use crate::tasks::error::TaskError;
-use crate::tasks::list::{TaskList, TaskListTrait};
+use crate::tasks::list::TaskList;
 use colored::Colorize;
 use std::io;
 use std::io::Write;
 
 pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError> {
-    let tasks = tasks.sort_by_urgency();
-
     let stdout = io::stdout();
     let mut handle = io::BufWriter::new(stdout);
 
@@ -15,7 +13,7 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
     let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
         .try_into()
         .expect("Failed to parse task list length width");
-    for item in &tasks {
+    for item in tasks {
         let mut line = format!("{:0width$}) {}", item.idx, item.task, width = width);
         if let Some(priority) = item.task.priority {
             line = match priority {

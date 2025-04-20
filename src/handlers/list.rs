@@ -20,6 +20,7 @@ pub fn handle_list(params: List, storage: TaskStorage) -> Result<(), TaskError> 
         tasks = tasks.filter_from_query(&query).collect();
     }
 
+    tasks = tasks.sort_by_urgency();
     print_tasks_list(&tasks, total)?;
     Ok(())
 }
