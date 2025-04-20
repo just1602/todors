@@ -1,7 +1,9 @@
+use chrono::{Days, Local};
+
 use super::{query::TaskQuery, task::Task};
 
 // FIXME: fix task so we can implement `Copy` instead of `Clone`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TaskListItem {
     pub idx: usize,
     pub task: Task,
@@ -103,6 +105,24 @@ impl TaskListTrait for TaskList {
 
     fn sort_by_urgency(&self) -> TaskList {
         // FIXME: there must be a better way to do this sort
+        // FIXME: could this use `filter_from_query`
+        // FIXME: there must be a way to use iterator / filter(ing) / sort(ing) to make this better
+        // TODO: improve sorting by also taking due date into account
+        // - sort each priority with the ones with due date first
+        let mut due_tasks: TaskList = self
+            .clone()
+            .into_iter()
+            .filter(|item| {
+                let due_start_to_be_urgent = Local::now()
+                    .date_naive()
+                    .checked_sub_days(Days::new(2))
+                    .expect("Failed to find the date where due tasks start to be urgent");
+                item.task
+                    .due_date
+                    .is_some_and(|d| d <= due_start_to_be_urgent)
+            })
+            .collect();
+        due_tasks.sort_by_key(|item| item.task.due_date);
         let mut pri_tasks: TaskList = self
             .clone()
             .into_iter()
@@ -115,9 +135,18 @@ impl TaskListTrait for TaskList {
             .into_iter()
             .filter(|item| item.task.priority.is_none())
             .collect();
-
         other_tasks.sort_by_key(|item| item.idx);
 
-        [pri_tasks, other_tasks].concat()
+        let mut tasks: TaskList = Vec::new();
+        [due_tasks, pri_tasks, other_tasks]
+            .concat()
+            .iter()
+            .for_each(|item| {
+                if !tasks.contains(item) {
+                    tasks.push(item.clone());
+                }
+            });
+        tasks.retain(|item| !item.task.completed);
+        tasks
     }
 }
