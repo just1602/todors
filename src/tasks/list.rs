@@ -104,11 +104,7 @@ impl TaskListTrait for TaskList {
     }
 
     fn sort_by_urgency(&self) -> TaskList {
-        // FIXME: there must be a better way to do this sort
-        // FIXME: could this use `filter_from_query`
-        // FIXME: there must be a way to use iterator / filter(ing) / sort(ing) to make this better
-        // TODO: improve sorting by also taking due date into account
-        // - sort each priority with the ones with due date first
+        // FIXME: For each task compute an urgency indices and sort on the indices.
         let mut due_tasks: TaskList = self
             .clone()
             .into_iter()
