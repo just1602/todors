@@ -1,6 +1,6 @@
 use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
-use crate::tasks::{error::TaskError, list::TaskList, task::TaskBuilder};
+use crate::tasks::{error::TaskError, list::TaskList, task::Task};
 
 pub struct TaskStorage {
     todo_file: PathBuf,
@@ -20,7 +20,7 @@ impl TaskStorage {
 
         let mut tasks = TaskList::new();
         for (idx, line) in content.lines().enumerate() {
-            let task = TaskBuilder::new(idx + 1, line.to_string()).build()?;
+            let task = Task::from_str(idx + 1, line)?;
 
             tasks.push(task)
         }

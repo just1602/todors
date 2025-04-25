@@ -97,7 +97,7 @@ impl Task {
     // The original implementation of this trait is highly inspired by this one:
     // https://github.com/kstep/todotxt.rs/blob/master/src/lib.rs
 
-    fn from_str(id: usize, mut s: &str) -> Result<Self, TaskError> {
+    pub fn from_str(id: usize, mut s: &str) -> Result<Self, TaskError> {
         let (completed, mut completed_at) = if s.starts_with("x ") {
             s = &s[2..];
             (true, s[..10].parse::<NaiveDate>().ok())
