@@ -24,6 +24,10 @@ impl TaskListTrait for TaskList {
                     return true;
                 }
 
+                if item.hashtags.iter().any(|ctx| query.hashtags.contains(ctx)) {
+                    return true;
+                }
+
                 if let Some(due_date) = query.due_date {
                     if item.due_date.is_some_and(|dd| dd == due_date) {
                         return true;
@@ -50,6 +54,10 @@ impl TaskListTrait for TaskList {
             }
 
             if item.contexts.iter().any(|ctx| query.contexts.contains(ctx)) {
+                return true;
+            }
+
+            if item.hashtags.iter().any(|ctx| query.hashtags.contains(ctx)) {
                 return true;
             }
 

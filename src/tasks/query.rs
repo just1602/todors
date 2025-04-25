@@ -9,6 +9,7 @@ pub struct TaskQuery {
     pub indexes: Vec<usize>,
     pub projects: Vec<String>,
     pub contexts: Vec<String>,
+    pub hashtags: Vec<String>,
     pub due_date: Option<NaiveDate>,
     pub tags: HashMap<String, String>,
     pub subject: String,
@@ -31,6 +32,7 @@ impl FromStr for TaskQuery {
             Init,
             Project(usize),
             Context(usize),
+            HashTag(usize),
             Index(usize),
             Range(usize, usize),
             TagBegin(usize),
@@ -42,6 +44,7 @@ impl FromStr for TaskQuery {
         let mut indexes = Vec::new();
         let mut projects = Vec::new();
         let mut contexts = Vec::new();
+        let mut hashtags = Vec::new();
         let mut tags = HashMap::new();
         let mut due_date = None;
 
@@ -49,6 +52,7 @@ impl FromStr for TaskQuery {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
+                ('#', State::Init) => State::HashTag(i),
                 ('0'..='9', State::Init) => State::Index(i),
                 ('A'..='z', State::Init) => State::TagBegin(i),
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
@@ -57,15 +61,21 @@ impl FromStr for TaskQuery {
 
                     State::Init
                 }
+                (' ', State::Project(j)) => {
+                    if i - j > 1 {
+                        projects.push(s[j + 1..i].to_string());
+                    }
+                    State::Init
+                }
                 (' ', State::Context(j)) => {
                     if i - j > 1 {
                         contexts.push(s[j + 1..i].to_string());
                     }
                     State::Init
                 }
-                (' ', State::Project(j)) => {
+                (' ', State::HashTag(j)) => {
                     if i - j > 1 {
-                        projects.push(s[j + 1..i].to_string());
+                        hashtags.push(s[j + 1..i].to_string());
                     }
                     State::Init
                 }
@@ -128,6 +138,9 @@ impl FromStr for TaskQuery {
             State::Context(j) => {
                 contexts.push(s[j + 1..].to_string());
             }
+            State::HashTag(j) => {
+                hashtags.push(s[j + 1..].to_string());
+            }
             State::Range(j, k) => {
                 let lhs = s[j..k].parse::<usize>().unwrap();
                 let rhs = s[k + 1..].parse::<usize>().unwrap();
@@ -148,6 +161,7 @@ impl FromStr for TaskQuery {
             indexes,
             projects,
             contexts,
+            hashtags,
             due_date,
             tags,
             subject,
