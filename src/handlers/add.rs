@@ -1,3 +1,5 @@
+use chrono::Local;
+
 use crate::{
     storage::TaskStorage,
     tasks::{error::TaskError, task::TaskBuilder},
@@ -11,6 +13,7 @@ pub fn handle_add(params: Add, storage: TaskStorage) -> Result<(), TaskError> {
 
     let task = TaskBuilder::new(tasks.len() + 1, params.task.join(" "))
         .priority(params.pri)
+        .created_at(Some(Local::now().date_naive()))
         .build()?;
 
     // NOTE: maybe I should just have keep the writing code inline

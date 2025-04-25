@@ -25,25 +25,34 @@ pub struct TaskBuilder {
     id: usize,
     user_query: String,
     pri: Option<char>,
+    creation_date: Option<NaiveDate>,
 }
 
 impl TaskBuilder {
-    pub fn new(id: usize, user_query: String) -> TaskBuilder {
+    pub fn new(id: usize, user_query: String) -> Self {
         TaskBuilder {
             id,
             user_query,
             pri: None,
+            creation_date: None,
         }
     }
 
-    pub fn priority(mut self, pri: Option<char>) -> TaskBuilder {
+    pub fn priority(mut self, pri: Option<char>) -> Self {
         self.pri = pri;
+        self
+    }
+
+    pub fn created_at(mut self, created_at: Option<NaiveDate>) -> Self {
+        self.creation_date = created_at;
         self
     }
 
     pub fn build(self) -> Result<Task, TaskError> {
         let mut task = Task::from_str(self.id, &self.user_query)?;
-        task.created_at = Some(Local::now().date_naive());
+        if task.created_at.is_none() {
+            task.created_at = self.creation_date;
+        }
 
         if task.priority.is_none() {
             task.priority = self.pri;
