@@ -16,6 +16,7 @@ pub struct Task {
     pub due_date: Option<NaiveDate>,
     pub contexts: Vec<String>,
     pub projects: Vec<String>,
+    pub hashtags: Vec<String>,
     pub tags: HashMap<String, String>,
 }
 
@@ -137,6 +138,7 @@ impl Task {
             Init,
             Context(usize),
             Project(usize),
+            HashTag(usize),
             TagBegin(usize),
             TagEnd(usize, usize),
         }
@@ -144,6 +146,7 @@ impl Task {
         let mut state = State::Init;
         let mut contexts = Vec::new();
         let mut projects = Vec::new();
+        let mut hashtags = Vec::new();
         let mut tags = HashMap::new();
 
         // Some tag we know about
@@ -155,6 +158,7 @@ impl Task {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
+                ('#', State::Init) => State::HashTag(i),
                 (char::MIN..=char::MAX, State::Init) => State::TagBegin(i),
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
                 (' ', State::TagBegin(_)) => State::Init,
@@ -167,6 +171,12 @@ impl Task {
                 (' ', State::Project(j)) => {
                     if i - j > 1 {
                         projects.push(buf[j + 1..i].to_string());
+                    }
+                    State::Init
+                }
+                (' ', State::HashTag(j)) => {
+                    if i - j > 1 {
+                        hashtags.push(buf[j + 1..i].to_string());
                     }
                     State::Init
                 }
@@ -217,6 +227,10 @@ impl Task {
                 contexts.push(buf[j + 1..].to_string());
                 subject.extend(&buf.as_bytes()[j..]);
             }
+            State::HashTag(j) => {
+                hashtags.push(buf[j + 1..].to_string());
+                subject.extend(&buf.as_bytes()[j..]);
+            }
             State::TagBegin(j) => {
                 subject.extend(&buf.as_bytes()[j..]);
             }
@@ -240,6 +254,7 @@ impl Task {
             due_date,
             contexts,
             projects,
+            hashtags,
             tags,
         })
     }
@@ -426,6 +441,21 @@ mod tests {
                 contexts: vec![],
                 due_date: NaiveDate::from_ymd_opt(2024, 6, 1),
                 tags: HashMap::from([]),
+                ..Task::default()
+            }
+        )
+    }
+
+    #[test]
+    fn it_parses_task_with_hash_tag() {
+        let line = "some task I'll do #next";
+        let task = Task::from_str(0, line).unwrap();
+
+        assert_eq!(
+            task,
+            Task {
+                subject: "some task I'll do #next".to_string(),
+                hashtags: vec!["next".to_string()],
                 ..Task::default()
             }
         )
