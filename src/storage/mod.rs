@@ -1,10 +1,6 @@
 use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
-use crate::tasks::{
-    error::TaskError,
-    list::{TaskList, TaskListItem},
-    task::Task,
-};
+use crate::tasks::{error::TaskError, list::TaskList, task::TaskBuilder};
 
 pub struct TaskStorage {
     todo_file: PathBuf,
@@ -12,7 +8,7 @@ pub struct TaskStorage {
 
 impl TaskStorage {
     pub fn new(todo_file: PathBuf) -> Self {
-        TaskStorage { todo_file }
+        Self { todo_file }
     }
 }
 
@@ -24,11 +20,9 @@ impl TaskStorage {
 
         let mut tasks = TaskList::new();
         for (idx, line) in content.lines().enumerate() {
-            let Ok(task) = line.parse::<Task>() else {
-                return Err(TaskError::FailedToParse);
-            };
+            let task = TaskBuilder::new(idx + 1, line.to_string()).build()?;
 
-            tasks.push(TaskListItem { idx: idx + 1, task })
+            tasks.push(task)
         }
 
         Ok(tasks)
@@ -46,8 +40,8 @@ impl TaskStorage {
             return Err(TaskError::FailedToOpenTodoFile);
         };
 
-        for item in tasks {
-            match file.write_fmt(format_args!("{}\n", item.task)) {
+        for task in tasks {
+            match file.write_fmt(format_args!("{}\n", task)) {
                 Ok(_) => {}
                 Err(_) => return Err(TaskError::FailedToSave),
             }

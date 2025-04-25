@@ -12,8 +12,8 @@ pub fn handle_due(_params: Due, storage: TaskStorage) -> Result<(), TaskError> {
 
     // TODO: is there a way to have a less leaky interface for this?
     // It'd probably not be the job of the list to know about due stuff.
-    tasks.retain(|item| !item.task.completed && item.task.due_date.is_some());
-    tasks.sort_by_key(|item| item.task.due_date);
+    tasks.retain(|task| !task.completed && task.due_date.is_some());
+    tasks.sort_by_key(|task| task.due_date);
 
     print_tasks_list(&tasks, total)?;
 

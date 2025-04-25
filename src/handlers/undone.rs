@@ -10,7 +10,7 @@ pub fn handle_undone(params: Undone, storage: TaskStorage) -> Result<(), TaskErr
 
     tasks
         .filter_mut_from_query(&query)
-        .for_each(|item| item.task.undo());
+        .for_each(|task| task.undo());
 
     storage.perist(tasks)
 }

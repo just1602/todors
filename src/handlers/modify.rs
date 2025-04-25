@@ -11,37 +11,37 @@ pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<(), TaskErr
 
     let idx_to_modify: Vec<usize> = tasks
         .filter_from_query(&query)
-        .map(|item| item.idx)
+        .map(|task| task.id)
         .collect();
 
     if params.priority.is_some() {
-        tasks.iter_mut().for_each(|item| {
-            if idx_to_modify.contains(&item.idx) {
-                item.task.priority = params.priority
+        tasks.iter_mut().for_each(|task| {
+            if idx_to_modify.contains(&task.id) {
+                task.priority = params.priority
             }
         });
     }
 
     if params.rm_priority {
-        tasks.iter_mut().for_each(|item| {
-            if idx_to_modify.contains(&item.idx) {
-                item.task.priority = None
+        tasks.iter_mut().for_each(|task| {
+            if idx_to_modify.contains(&task.id) {
+                task.priority = None
             }
         });
     }
 
     if params.due_date.is_some() {
-        tasks.iter_mut().for_each(|item| {
-            if idx_to_modify.contains(&item.idx) {
-                item.task.due_date = params.due_date
+        tasks.iter_mut().for_each(|task| {
+            if idx_to_modify.contains(&task.id) {
+                task.due_date = params.due_date
             }
         });
     }
 
     if params.rm_due_date {
-        tasks.iter_mut().for_each(|item| {
-            if idx_to_modify.contains(&item.idx) {
-                item.task.due_date = None
+        tasks.iter_mut().for_each(|task| {
+            if idx_to_modify.contains(&task.id) {
+                task.due_date = None
             }
         });
     }

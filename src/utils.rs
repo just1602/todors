@@ -13,9 +13,9 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
     let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
         .try_into()
         .expect("Failed to parse task list length width");
-    for item in tasks {
-        let mut line = format!("{:0width$}) {}", item.idx, item.task, width = width);
-        if let Some(priority) = item.task.priority {
+    for task in tasks {
+        let mut line = format!("{:0width$}) {}", task.id, task, width = width);
+        if let Some(priority) = task.priority {
             line = match priority {
                 'A' => line.magenta().bold().to_string(),
                 'B' => line.yellow().bold().to_string(),

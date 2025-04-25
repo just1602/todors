@@ -10,12 +10,12 @@ pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<(), TaskErr
 
     let idx_to_remove: Vec<usize> = tasks
         .filter_from_query(&query)
-        .map(|item| item.idx)
+        .map(|task| task.id)
         .collect();
 
     let tasks = tasks
         .into_iter()
-        .filter(|item| !idx_to_remove.contains(&item.idx))
+        .filter(|task| !idx_to_remove.contains(&task.id))
         .collect();
 
     storage.perist(tasks)

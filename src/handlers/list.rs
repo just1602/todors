@@ -11,7 +11,7 @@ pub fn handle_list(params: List, storage: TaskStorage) -> Result<(), TaskError> 
     let total = tasks.len();
 
     if !params.all {
-        tasks.retain(|item| !item.task.completed)
+        tasks.retain(|task| !task.completed)
     }
 
     if let Some(query) = &params.query {

@@ -15,7 +15,7 @@ pub fn handle_done(params: Done, storage: TaskStorage) -> Result<(), TaskError> 
 
     tasks
         .filter_mut_from_query(&query)
-        .for_each(|item| item.task.complete());
+        .for_each(|task| task.complete());
 
     let completed_tasks: TaskList = tasks.filter_from_query(&query).collect();
 

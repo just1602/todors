@@ -1,5 +1,5 @@
 use chrono::{Local, NaiveDate};
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{collections::HashMap, fmt::Display};
 
 use crate::tasks::error::TaskError;
 
@@ -7,6 +7,7 @@ use crate::tasks::error::TaskError;
 // TODO: migrate away from String to &str
 #[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Task {
+    pub id: usize,
     pub subject: String,
     pub priority: Option<char>,
     pub created_at: Option<NaiveDate>,
@@ -18,14 +19,17 @@ pub struct Task {
     pub tags: HashMap<String, String>,
 }
 
+// TODO: switch from String to &str
 pub struct TaskBuilder {
+    id: usize,
     user_query: String,
     pri: Option<char>,
 }
 
 impl TaskBuilder {
-    pub fn new(user_query: String) -> TaskBuilder {
+    pub fn new(id: usize, user_query: String) -> TaskBuilder {
         TaskBuilder {
+            id,
             user_query,
             pri: None,
         }
@@ -37,7 +41,7 @@ impl TaskBuilder {
     }
 
     pub fn build(self) -> Result<Task, TaskError> {
-        let mut task: Task = self.user_query.parse()?;
+        let mut task = Task::from_str(self.id, &self.user_query)?;
         task.created_at = Some(Local::now().date_naive());
 
         if task.priority.is_none() {
@@ -47,8 +51,6 @@ impl TaskBuilder {
         Ok(task)
     }
 }
-
-impl Task {}
 
 impl Display for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -81,13 +83,11 @@ impl Display for Task {
     }
 }
 
-impl FromStr for Task {
+impl Task {
     // The original implementation of this trait is highly inspired by this one:
     // https://github.com/kstep/todotxt.rs/blob/master/src/lib.rs
 
-    type Err = TaskError;
-
-    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+    fn from_str(id: usize, mut s: &str) -> Result<Self, TaskError> {
         let (completed, mut completed_at) = if s.starts_with("x ") {
             s = &s[2..];
             (true, s[..10].parse::<NaiveDate>().ok())
@@ -231,6 +231,7 @@ impl FromStr for Task {
             .to_string();
 
         Ok(Task {
+            id,
             subject,
             priority,
             created_at,
@@ -266,11 +267,12 @@ mod tests {
     #[test]
     fn it_parses_task() {
         let line = "Some task to do";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(1, line).unwrap();
 
         assert_eq!(
             task,
             Task {
+                id: 1,
                 subject: "Some task to do".to_string(),
                 ..Task::default()
             }
@@ -280,7 +282,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_creation_date() {
         let line = "2024-05-01 Some task to do";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -295,7 +297,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_priority_and_creation_date() {
         let line = "(A) 2024-05-01 Some task to do";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -311,7 +313,7 @@ mod tests {
     #[test]
     fn it_parses_completed_task_without_priority_nor_completion_date() {
         let line = "x 2024-05-01 Some task to do";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -327,7 +329,7 @@ mod tests {
     #[test]
     fn it_parses_completed_task_with_completion_date() {
         let line = "x 2024-06-01 2024-05-01 Some task to do";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -344,7 +346,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_project_and_context() {
         let line = "2024-05-01 Some task to do +project @home";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -361,7 +363,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_tags() {
         let line = "2024-05-01 Some task to do +project @home due:2024-06-01 team:devops";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -380,7 +382,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_due_date_at_the_end() {
         let line = "2024-05-01 Some task to do +project @home team:devops due:2024-06-01";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -399,7 +401,7 @@ mod tests {
     #[test]
     fn it_parses_small_task() {
         let line = "small";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
@@ -413,7 +415,7 @@ mod tests {
     #[test]
     fn it_parses_task_with_french_accent_correctly() {
         let line = "2024-05-01 écrire une tâche avec des accents due:2024-06-01";
-        let task = line.parse::<Task>().unwrap();
+        let task = Task::from_str(0, line).unwrap();
 
         assert_eq!(
             task,
