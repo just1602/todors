@@ -1,5 +1,3 @@
-use chrono::{Days, Local};
-
 use super::{query::TaskQuery, task::Task};
 
 pub type TaskList = Vec<Task>;
@@ -7,7 +5,7 @@ pub type TaskList = Vec<Task>;
 pub trait TaskListTrait {
     fn filter_from_query(&self, query: &TaskQuery) -> impl Iterator<Item = Task>;
     fn filter_mut_from_query(&mut self, query: &TaskQuery) -> impl Iterator<Item = &mut Task>;
-    fn sort_by_urgency(&self) -> TaskList;
+    fn sort_by_urgency(&mut self) -> TaskList;
 }
 
 impl TaskListTrait for TaskList {
@@ -70,44 +68,9 @@ impl TaskListTrait for TaskList {
         })
     }
 
-    fn sort_by_urgency(&self) -> TaskList {
-        // FIXME: For each task compute an urgency indices and sort on the indices.
-        let mut due_tasks: TaskList = self
-            .clone()
-            .into_iter()
-            .filter(|item| {
-                let due_start_to_be_urgent = Local::now()
-                    .date_naive()
-                    .checked_sub_days(Days::new(2))
-                    .expect("Failed to compute the day when due tasks become urgent.");
-                item.due_date.is_some_and(|d| d <= due_start_to_be_urgent)
-            })
-            .collect();
-        due_tasks.sort_by_key(|item| item.due_date);
-        let mut pri_tasks: TaskList = self
-            .clone()
-            .into_iter()
-            .filter(|item| item.priority.is_some())
-            .collect();
-        pri_tasks.sort_by_key(|item| item.priority);
-
-        let mut other_tasks: TaskList = self
-            .clone()
-            .into_iter()
-            .filter(|item| item.priority.is_none())
-            .collect();
-        other_tasks.sort_by_key(|item| item.id);
-
-        let mut tasks: TaskList = Vec::new();
-        [due_tasks, pri_tasks, other_tasks]
-            .concat()
-            .iter()
-            .for_each(|item| {
-                if !tasks.contains(item) {
-                    tasks.push(item.clone());
-                }
-            });
-        tasks.retain(|item| !item.completed);
-        tasks
+    fn sort_by_urgency(&mut self) -> TaskList {
+        self.sort_by_key(|task| task.compute_urgency());
+        self.reverse();
+        self.to_vec()
     }
 }

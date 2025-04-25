@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveDate};
+use chrono::{Days, Local, Months, NaiveDate};
 use std::{collections::HashMap, fmt::Display};
 
 use crate::tasks::error::TaskError;
@@ -258,9 +258,7 @@ impl Task {
             tags,
         })
     }
-}
 
-impl Task {
     pub fn complete(&mut self) {
         self.completed = true;
         self.completed_at = Some(Local::now().date_naive());
@@ -272,6 +270,61 @@ impl Task {
         self.completed_at = None;
         // FIXME: if there's a priority, keep it in the description like `pri:value` so we can
         // bring it back
+    }
+
+    pub fn compute_urgency(&self) -> usize {
+        // https://taskwarrior.org/docs/urgency/
+        // taskwarrior urgency coefficients
+        // FIXME: make all those variable configurable
+        // urgency.user.tag.next.coefficient           15.0 # +next tag
+        // urgency.due.coefficient                     12.0 # overdue or near due date
+        // urgency.uda.priority.H.coefficient           6.0 # high Priority
+        // urgency.uda.priority.M.coefficient           3.9 # medium Priority
+        // urgency.uda.priority.L.coefficient           1.8 # low Priority
+        // urgency.age.coefficient                      2.0 # coefficient for age
+        // urgency.project.coefficient                  1.0 # assigned to any project
+        let mut urgency = 0;
+
+        if self.hashtags.contains(&String::from("next")) {
+            urgency += 15;
+        }
+
+        let due_start_to_be_urgent = Local::now()
+            .date_naive()
+            // FIXME: make the number of days configurable
+            .checked_sub_days(Days::new(2))
+            .expect("Failed to compute the day when due tasks become urgent.");
+        if self
+            .due_date
+            .is_some_and(|date| date <= due_start_to_be_urgent)
+        {
+            urgency += 12;
+        }
+
+        let pri_urgency = match &self.priority {
+            Some('A') => 6,
+            Some('B') => 4,
+            Some('C') => 2,
+            Some('D'..'Z') => 1,
+            _ => 0,
+        };
+
+        urgency += pri_urgency;
+
+        let one_month_ago = Local::now()
+            .date_naive()
+            .checked_sub_months(Months::new(1))
+            .expect("Failed to compute 1 month ago.");
+
+        if self.created_at.is_some_and(|date| date <= one_month_ago) {
+            urgency += 2;
+        }
+
+        if !self.projects.is_empty() {
+            urgency += 1;
+        }
+
+        urgency
     }
 }
 
