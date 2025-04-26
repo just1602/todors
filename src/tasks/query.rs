@@ -200,6 +200,14 @@ mod tests {
     }
 
     #[test]
+    fn it_parse_hastags() {
+        let query = "test #home".parse::<TaskQuery>().unwrap();
+
+        assert_eq!(query.subject, "test");
+        assert_eq!(query.hashtags, vec!["home"])
+    }
+
+    #[test]
     fn it_parse_due_date() {
         let query = "test due:2024-08-01".parse::<TaskQuery>().unwrap();
 
