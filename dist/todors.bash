@@ -30,6 +30,9 @@ _todors() {
             todors,due)
                 cmd="todors__due"
                 ;;
+            todors,e)
+                cmd="todors__edit"
+                ;;
             todors,edit)
                 cmd="todors__edit"
                 ;;
@@ -103,7 +106,7 @@ _todors() {
 
     case "${cmd}" in
         todors)
-            opts="-c -h -V --config --help --version add a done do list ls remove rm edit due undone undo clean modify mod next help"
+            opts="-c -h -V --config --help --version add a done do list ls remove rm edit e due undone undo clean modify mod next help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

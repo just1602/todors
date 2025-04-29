@@ -88,7 +88,11 @@ pub struct Remove {
 }
 
 #[derive(Parser)]
-#[command(name = "edit", about = "Edit the todo file with a text editor")]
+#[command(
+    name = "edit",
+    visible_alias = "e",
+    about = "Edit the todo file with a text editor"
+)]
 pub struct Edit {
     pub item: Option<u32>,
 }

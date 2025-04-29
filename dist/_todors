@@ -97,6 +97,13 @@ _arguments "${_arguments_options[@]}" : \
 '::item:_default' \
 && ret=0
 ;;
+(e)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'::item:_default' \
+&& ret=0
+;;
 (due)
 _arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
@@ -233,6 +240,7 @@ _todors_commands() {
 'remove:Remove selected item from the todo file' \
 'rm:Remove selected item from the todo file' \
 'edit:Edit the todo file with a text editor' \
+'e:Edit the todo file with a text editor' \
 'due:List all due tasks' \
 'undone:Mark selected tasks as not done' \
 'undo:Mark selected tasks as not done' \
