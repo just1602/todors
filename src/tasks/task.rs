@@ -281,7 +281,7 @@ impl Task {
         // bring it back
     }
 
-    pub fn compute_urgency(&self) -> usize {
+    pub fn compute_urgency(&self) -> i32 {
         // https://taskwarrior.org/docs/urgency/
         // taskwarrior urgency coefficients
         // FIXME: make all those variable configurable
@@ -296,6 +296,14 @@ impl Task {
 
         if self.hashtags.contains(&String::from("next")) {
             urgency += 15;
+        }
+
+        if self.hashtags.contains(&String::from("inbox")) {
+            urgency += 15;
+        }
+
+        if self.hashtags.contains(&String::from("backlog")) {
+            urgency -= 30;
         }
 
         let due_start_to_be_urgent = Local::now()
