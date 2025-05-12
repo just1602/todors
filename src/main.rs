@@ -14,9 +14,9 @@ fn main() {
         // FIXME: is there a way to not clone here
         path.clone()
     } else if let Ok(path) = std::env::var("XDG_CONFIG_HOME") {
-        PathBuf::from(format!("{}/todors/config.toml", path))
+        PathBuf::from(format!("{path}/todors/config.toml"))
     } else if let Ok(home_path) = std::env::var("HOME") {
-        PathBuf::from(format!("{}/.config/todors/config.toml", home_path))
+        PathBuf::from(format!("{home_path}/.config/todors/config.toml"))
     } else {
         std::process::exit(1);
     };
@@ -37,7 +37,7 @@ fn main() {
         Commands::Next(params) => handle_next(params, storage),
     };
 
-    if let Err(e) = result {
-        eprintln!("An error occured: {}", e);
+    if let Err(err) = result {
+        eprintln!("An error occured: {err}");
     }
 }

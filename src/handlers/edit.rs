@@ -16,7 +16,7 @@ pub fn handle_edit(params: Edit, config: Config) -> Result<(), TaskError> {
 
     if let Err(e) = cmd.arg(config.todo_file()).status() {
         // TODO: use a logging library instead of `eprintln!`
-        eprintln!("Failed to edit the todo file: {}", e);
+        eprintln!("Failed to edit the todo file: {e}");
         return Err(TaskError::FailedToOpenTodoFile);
     }
 
