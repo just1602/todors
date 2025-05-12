@@ -23,10 +23,10 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
                 _ => line.blue().bold().to_string(),
             };
         }
-        match writeln!(handle, "{}", line) {
+        match writeln!(handle, "{line}") {
             Ok(_) => {}
             Err(err) => {
-                eprint!("Failed to write tasks list to stdout: {}", err);
+                eprint!("Failed to write tasks list to stdout: {err}");
                 return Err(TaskError::FailedToWriteToStdout);
             }
         }
@@ -39,7 +39,7 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
     ) {
         Ok(_) => {}
         Err(err) => {
-            eprint!("Failed to write tasks list to stdout: {}", err);
+            eprint!("Failed to write tasks list to stdout: {err}");
             return Err(TaskError::FailedToWriteToStdout);
         }
     }

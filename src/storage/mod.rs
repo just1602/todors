@@ -41,7 +41,7 @@ impl TaskStorage {
         };
 
         for task in tasks {
-            match file.write_fmt(format_args!("{}\n", task)) {
+            match file.write_fmt(format_args!("{task}\n")) {
                 Ok(_) => {}
                 Err(_) => return Err(TaskError::FailedToSave),
             }
