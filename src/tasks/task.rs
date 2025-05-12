@@ -67,7 +67,7 @@ impl Display for Task {
         if self.completed {
             f.write_str("x ")?;
             if let Some(completed_at) = self.completed_at {
-                f.write_fmt(format_args!("{} ", completed_at))?;
+                f.write_fmt(format_args!("{completed_at} "))?;
             }
         }
 
@@ -76,17 +76,17 @@ impl Display for Task {
         }
 
         if let Some(created_at) = self.created_at {
-            f.write_fmt(format_args!("{} ", created_at))?;
+            f.write_fmt(format_args!("{created_at} "))?;
         }
 
         f.write_str(&self.subject)?;
 
         if let Some(due_date) = self.due_date {
-            f.write_fmt(format_args!(" due:{}", due_date))?;
+            f.write_fmt(format_args!(" due:{due_date}"))?;
         }
 
         for (tag, value) in &self.tags {
-            f.write_fmt(format_args!(" {}:{}", tag, value))?;
+            f.write_fmt(format_args!(" {tag}:{value}"))?;
         }
 
         Ok(())

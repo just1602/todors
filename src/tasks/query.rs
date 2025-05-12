@@ -48,7 +48,7 @@ impl FromStr for TaskQuery {
         let mut tags = HashMap::new();
         let mut due_date = None;
 
-        for (i, c) in s.chars().enumerate() {
+        for (i, c) in s.char_indices() {
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
