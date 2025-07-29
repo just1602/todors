@@ -11,7 +11,6 @@ let
 in
 rustPlatform.buildRustPackage {
   inherit pname version;
-  useFetchCargoVendor = true;
 
   src = ./..;
   cargoLock = {
