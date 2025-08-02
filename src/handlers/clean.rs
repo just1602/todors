@@ -5,5 +5,5 @@ pub fn handle_clean(_params: Clean, storage: TaskStorage) -> Result<(), TaskErro
 
     tasks.retain(|t| !t.completed);
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }

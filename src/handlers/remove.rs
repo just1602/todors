@@ -18,5 +18,5 @@ pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<(), TaskErr
         .filter(|task| !idx_to_remove.contains(&task.id))
         .collect();
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }

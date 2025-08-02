@@ -28,7 +28,7 @@ impl TaskStorage {
         Ok(tasks)
     }
 
-    pub fn perist(&self, tasks: TaskList) -> Result<(), TaskError> {
+    pub fn persist(&self, tasks: TaskList) -> Result<(), TaskError> {
         let mut file = if let Ok(file) = OpenOptions::new()
             .create(true)
             .truncate(true)

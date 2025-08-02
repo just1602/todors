@@ -22,5 +22,5 @@ pub fn handle_add(params: Add, storage: TaskStorage) -> Result<(), TaskError> {
 
     print_tasks_list(&vec![task], tasks.len())?;
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }

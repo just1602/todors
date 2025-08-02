@@ -21,5 +21,5 @@ pub fn handle_done(params: Done, storage: TaskStorage) -> Result<(), TaskError> 
 
     print_tasks_list(&completed_tasks, total)?;
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }

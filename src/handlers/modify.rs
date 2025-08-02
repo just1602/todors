@@ -46,5 +46,5 @@ pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<(), TaskErr
         });
     }
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }

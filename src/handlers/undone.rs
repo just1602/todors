@@ -12,5 +12,5 @@ pub fn handle_undone(params: Undone, storage: TaskStorage) -> Result<(), TaskErr
         .filter_mut_from_query(&query)
         .for_each(|task| task.undo());
 
-    storage.perist(tasks)
+    storage.persist(tasks)
 }
