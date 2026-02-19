@@ -11,7 +11,7 @@ path = "src/main.rs"
 chrono = "0.4.43"
 clap = { version = "4.5.59", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
-toml = "1.0.2"
+toml = "1.0.3"
 colored = "3"
 
 [dev-dependencies]
