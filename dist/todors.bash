@@ -17,91 +17,91 @@ _todors() {
                 cmd="todors"
                 ;;
             todors,a)
-                cmd="todors__add"
+                cmd="todors__subcmd__add"
                 ;;
             todors,add)
-                cmd="todors__add"
+                cmd="todors__subcmd__add"
                 ;;
             todors,clean)
-                cmd="todors__clean"
+                cmd="todors__subcmd__clean"
                 ;;
             todors,do)
-                cmd="todors__done"
+                cmd="todors__subcmd__done"
                 ;;
             todors,done)
-                cmd="todors__done"
+                cmd="todors__subcmd__done"
                 ;;
             todors,due)
-                cmd="todors__due"
+                cmd="todors__subcmd__due"
                 ;;
             todors,e)
-                cmd="todors__edit"
+                cmd="todors__subcmd__edit"
                 ;;
             todors,edit)
-                cmd="todors__edit"
+                cmd="todors__subcmd__edit"
                 ;;
             todors,help)
-                cmd="todors__help"
+                cmd="todors__subcmd__help"
                 ;;
             todors,list)
-                cmd="todors__list"
+                cmd="todors__subcmd__list"
                 ;;
             todors,ls)
-                cmd="todors__list"
+                cmd="todors__subcmd__list"
                 ;;
             todors,mod)
-                cmd="todors__modify"
+                cmd="todors__subcmd__modify"
                 ;;
             todors,modify)
-                cmd="todors__modify"
+                cmd="todors__subcmd__modify"
                 ;;
             todors,next)
-                cmd="todors__next"
+                cmd="todors__subcmd__next"
                 ;;
             todors,remove)
-                cmd="todors__remove"
+                cmd="todors__subcmd__remove"
                 ;;
             todors,rm)
-                cmd="todors__remove"
+                cmd="todors__subcmd__remove"
                 ;;
             todors,undo)
-                cmd="todors__undone"
+                cmd="todors__subcmd__undone"
                 ;;
             todors,undone)
-                cmd="todors__undone"
+                cmd="todors__subcmd__undone"
                 ;;
-            todors__help,add)
-                cmd="todors__help__add"
+            todors__subcmd__help,add)
+                cmd="todors__subcmd__help__subcmd__add"
                 ;;
-            todors__help,clean)
-                cmd="todors__help__clean"
+            todors__subcmd__help,clean)
+                cmd="todors__subcmd__help__subcmd__clean"
                 ;;
-            todors__help,done)
-                cmd="todors__help__done"
+            todors__subcmd__help,done)
+                cmd="todors__subcmd__help__subcmd__done"
                 ;;
-            todors__help,due)
-                cmd="todors__help__due"
+            todors__subcmd__help,due)
+                cmd="todors__subcmd__help__subcmd__due"
                 ;;
-            todors__help,edit)
-                cmd="todors__help__edit"
+            todors__subcmd__help,edit)
+                cmd="todors__subcmd__help__subcmd__edit"
                 ;;
-            todors__help,help)
-                cmd="todors__help__help"
+            todors__subcmd__help,help)
+                cmd="todors__subcmd__help__subcmd__help"
                 ;;
-            todors__help,list)
-                cmd="todors__help__list"
+            todors__subcmd__help,list)
+                cmd="todors__subcmd__help__subcmd__list"
                 ;;
-            todors__help,modify)
-                cmd="todors__help__modify"
+            todors__subcmd__help,modify)
+                cmd="todors__subcmd__help__subcmd__modify"
                 ;;
-            todors__help,next)
-                cmd="todors__help__next"
+            todors__subcmd__help,next)
+                cmd="todors__subcmd__help__subcmd__next"
                 ;;
-            todors__help,remove)
-                cmd="todors__help__remove"
+            todors__subcmd__help,remove)
+                cmd="todors__subcmd__help__subcmd__remove"
                 ;;
-            todors__help,undone)
-                cmd="todors__help__undone"
+            todors__subcmd__help,undone)
+                cmd="todors__subcmd__help__subcmd__undone"
                 ;;
             *)
                 ;;
@@ -131,8 +131,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__add)
-            opts="-h --pri --help [TASK]..."
+        todors__subcmd__add)
+            opts="-h --pri --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -149,7 +149,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__clean)
+        todors__subcmd__clean)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -163,21 +163,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__done)
-            opts="-h --help <QUERY>..."
-            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
-                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-                return 0
-            fi
-            case "${prev}" in
-                *)
-                    COMPREPLY=()
-                    ;;
-            esac
-            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-            return 0
-            ;;
-        todors__due)
+        todors__subcmd__done)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -191,8 +177,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__edit)
-            opts="-h --help [ITEM]"
+        todors__subcmd__due)
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -205,7 +191,21 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help)
+        todors__subcmd__edit)
+            opts="-h --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        todors__subcmd__help)
             opts="add done list remove edit due undone clean modify next help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -219,7 +219,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__add)
+        todors__subcmd__help__subcmd__add)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -233,7 +233,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__clean)
+        todors__subcmd__help__subcmd__clean)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -247,7 +247,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__done)
+        todors__subcmd__help__subcmd__done)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -261,7 +261,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__due)
+        todors__subcmd__help__subcmd__due)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -275,7 +275,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__edit)
+        todors__subcmd__help__subcmd__edit)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -289,7 +289,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__help)
+        todors__subcmd__help__subcmd__help)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -303,7 +303,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__list)
+        todors__subcmd__help__subcmd__list)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -317,7 +317,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__modify)
+        todors__subcmd__help__subcmd__modify)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -331,7 +331,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__next)
+        todors__subcmd__help__subcmd__next)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -345,7 +345,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__remove)
+        todors__subcmd__help__subcmd__remove)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -359,7 +359,7 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__help__undone)
+        todors__subcmd__help__subcmd__undone)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -373,8 +373,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__list)
-            opts="-h --all --help [QUERY]..."
+        todors__subcmd__list)
+            opts="-h --all --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -387,8 +387,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__modify)
-            opts="-h --pri --priority --rm-pri --rm-priority --due-date --rm-due-date --help <QUERY>..."
+        todors__subcmd__modify)
+            opts="-h --pri --priority --rm-pri --rm-priority --due-date --rm-due-date --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -413,8 +413,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__next)
-            opts="-h --help [QUERY]..."
+        todors__subcmd__next)
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -427,8 +427,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__remove)
-            opts="-h --help <QUERY>..."
+        todors__subcmd__remove)
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -441,8 +441,8 @@ _todors() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        todors__undone)
-            opts="-h --help <QUERY>..."
+        todors__subcmd__undone)
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

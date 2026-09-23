@@ -165,7 +165,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" : \
-":: :_todors__help_commands" \
+":: :_todors__subcmd__help_commands" \
 "*::: :->help" \
 && ret=0
 
@@ -252,33 +252,33 @@ _todors_commands() {
     )
     _describe -t commands 'todors commands' commands "$@"
 }
-(( $+functions[_todors__add_commands] )) ||
-_todors__add_commands() {
+(( $+functions[_todors__subcmd__add_commands] )) ||
+_todors__subcmd__add_commands() {
     local commands; commands=()
     _describe -t commands 'todors add commands' commands "$@"
 }
-(( $+functions[_todors__clean_commands] )) ||
-_todors__clean_commands() {
+(( $+functions[_todors__subcmd__clean_commands] )) ||
+_todors__subcmd__clean_commands() {
     local commands; commands=()
     _describe -t commands 'todors clean commands' commands "$@"
 }
-(( $+functions[_todors__done_commands] )) ||
-_todors__done_commands() {
+(( $+functions[_todors__subcmd__done_commands] )) ||
+_todors__subcmd__done_commands() {
     local commands; commands=()
     _describe -t commands 'todors done commands' commands "$@"
 }
-(( $+functions[_todors__due_commands] )) ||
-_todors__due_commands() {
+(( $+functions[_todors__subcmd__due_commands] )) ||
+_todors__subcmd__due_commands() {
     local commands; commands=()
     _describe -t commands 'todors due commands' commands "$@"
 }
-(( $+functions[_todors__edit_commands] )) ||
-_todors__edit_commands() {
+(( $+functions[_todors__subcmd__edit_commands] )) ||
+_todors__subcmd__edit_commands() {
     local commands; commands=()
     _describe -t commands 'todors edit commands' commands "$@"
 }
-(( $+functions[_todors__help_commands] )) ||
-_todors__help_commands() {
+(( $+functions[_todors__subcmd__help_commands] )) ||
+_todors__subcmd__help_commands() {
     local commands; commands=(
 'add:Add a task to the list' \
 'done:Mark selected tasks as done' \
@@ -294,83 +294,83 @@ _todors__help_commands() {
     )
     _describe -t commands 'todors help commands' commands "$@"
 }
-(( $+functions[_todors__help__add_commands] )) ||
-_todors__help__add_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__add_commands] )) ||
+_todors__subcmd__help__subcmd__add_commands() {
     local commands; commands=()
     _describe -t commands 'todors help add commands' commands "$@"
 }
-(( $+functions[_todors__help__clean_commands] )) ||
-_todors__help__clean_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__clean_commands] )) ||
+_todors__subcmd__help__subcmd__clean_commands() {
     local commands; commands=()
     _describe -t commands 'todors help clean commands' commands "$@"
 }
-(( $+functions[_todors__help__done_commands] )) ||
-_todors__help__done_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__done_commands] )) ||
+_todors__subcmd__help__subcmd__done_commands() {
     local commands; commands=()
     _describe -t commands 'todors help done commands' commands "$@"
 }
-(( $+functions[_todors__help__due_commands] )) ||
-_todors__help__due_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__due_commands] )) ||
+_todors__subcmd__help__subcmd__due_commands() {
     local commands; commands=()
     _describe -t commands 'todors help due commands' commands "$@"
 }
-(( $+functions[_todors__help__edit_commands] )) ||
-_todors__help__edit_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__edit_commands] )) ||
+_todors__subcmd__help__subcmd__edit_commands() {
     local commands; commands=()
     _describe -t commands 'todors help edit commands' commands "$@"
 }
-(( $+functions[_todors__help__help_commands] )) ||
-_todors__help__help_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__help_commands] )) ||
+_todors__subcmd__help__subcmd__help_commands() {
     local commands; commands=()
     _describe -t commands 'todors help help commands' commands "$@"
 }
-(( $+functions[_todors__help__list_commands] )) ||
-_todors__help__list_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__list_commands] )) ||
+_todors__subcmd__help__subcmd__list_commands() {
     local commands; commands=()
     _describe -t commands 'todors help list commands' commands "$@"
 }
-(( $+functions[_todors__help__modify_commands] )) ||
-_todors__help__modify_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__modify_commands] )) ||
+_todors__subcmd__help__subcmd__modify_commands() {
     local commands; commands=()
     _describe -t commands 'todors help modify commands' commands "$@"
 }
-(( $+functions[_todors__help__next_commands] )) ||
-_todors__help__next_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__next_commands] )) ||
+_todors__subcmd__help__subcmd__next_commands() {
     local commands; commands=()
     _describe -t commands 'todors help next commands' commands "$@"
 }
-(( $+functions[_todors__help__remove_commands] )) ||
-_todors__help__remove_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__remove_commands] )) ||
+_todors__subcmd__help__subcmd__remove_commands() {
     local commands; commands=()
     _describe -t commands 'todors help remove commands' commands "$@"
 }
-(( $+functions[_todors__help__undone_commands] )) ||
-_todors__help__undone_commands() {
+(( $+functions[_todors__subcmd__help__subcmd__undone_commands] )) ||
+_todors__subcmd__help__subcmd__undone_commands() {
     local commands; commands=()
     _describe -t commands 'todors help undone commands' commands "$@"
 }
-(( $+functions[_todors__list_commands] )) ||
-_todors__list_commands() {
+(( $+functions[_todors__subcmd__list_commands] )) ||
+_todors__subcmd__list_commands() {
     local commands; commands=()
     _describe -t commands 'todors list commands' commands "$@"
 }
-(( $+functions[_todors__modify_commands] )) ||
-_todors__modify_commands() {
+(( $+functions[_todors__subcmd__modify_commands] )) ||
+_todors__subcmd__modify_commands() {
     local commands; commands=()
     _describe -t commands 'todors modify commands' commands "$@"
 }
-(( $+functions[_todors__next_commands] )) ||
-_todors__next_commands() {
+(( $+functions[_todors__subcmd__next_commands] )) ||
+_todors__subcmd__next_commands() {
     local commands; commands=()
     _describe -t commands 'todors next commands' commands "$@"
 }
-(( $+functions[_todors__remove_commands] )) ||
-_todors__remove_commands() {
+(( $+functions[_todors__subcmd__remove_commands] )) ||
+_todors__subcmd__remove_commands() {
     local commands; commands=()
     _describe -t commands 'todors remove commands' commands "$@"
 }
-(( $+functions[_todors__undone_commands] )) ||
-_todors__undone_commands() {
+(( $+functions[_todors__subcmd__undone_commands] )) ||
+_todors__subcmd__undone_commands() {
     local commands; commands=()
     _describe -t commands 'todors undone commands' commands "$@"
 }
