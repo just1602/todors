@@ -5,7 +5,7 @@ use crate::error::{TaskError, TaskResult, bail, report};
 
 // TODO: handle recurrences
 // TODO: migrate away from String to &str
-#[derive(Clone, Debug, Eq, PartialEq, Default)]
+#[derive(Debug, Eq, PartialEq, Default)]
 pub struct Task {
     pub id: usize,
     pub subject: String,
