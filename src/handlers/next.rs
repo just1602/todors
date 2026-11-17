@@ -13,16 +13,12 @@ pub fn handle_next(params: Next, storage: TaskStorage) -> AppResult<()> {
     if let Some(query) = &params.query {
         let query = TaskQuery::from_string_vec(query).context_to::<AppError>()?;
 
-        tasks = tasks.filter_from_query(&query).collect();
+        tasks.retain(|task| query.matches(task));
     }
 
     tasks.sort_by_urgency();
 
-    if let Some(task) = tasks.first() {
-        // FIXME: remove this clone
-        // TODO: check if this function can take a slice instead
-        print_tasks_list(&vec![task.clone()], total)?;
-    }
+    print_tasks_list(tasks.first(), total)?;
 
     Ok(())
 }

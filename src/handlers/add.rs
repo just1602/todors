@@ -5,9 +5,8 @@ use crate::{
     error::{AppError, AppResult, ResultExt},
     storage::TaskStorage,
     tasks::task::TaskBuilder,
+    utils::print_tasks_list,
 };
-
-use crate::utils::print_tasks_list;
 
 pub fn handle_add(params: Add, storage: TaskStorage) -> AppResult<()> {
     let mut tasks = storage.get_all().context_to::<AppError>()?;
@@ -18,11 +17,9 @@ pub fn handle_add(params: Add, storage: TaskStorage) -> AppResult<()> {
         .build()
         .context_to::<AppError>()?;
 
-    // NOTE: maybe I should just have keep the writing code inline
-    // FIXME: is there a way to avoid the clone here
-    tasks.push(task.clone());
+    tasks.push(task);
 
-    print_tasks_list(&vec![task], tasks.len())?;
+    print_tasks_list(tasks.last(), tasks.len())?;
 
     storage.persist(tasks).context_to::<AppError>()
 }

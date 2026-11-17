@@ -17,7 +17,7 @@ pub fn handle_list(params: List, storage: TaskStorage) -> AppResult<()> {
     if let Some(query) = &params.query {
         let query = TaskQuery::from_string_vec(query).context_to::<AppError>()?;
 
-        tasks = tasks.filter_from_query(&query).collect();
+        tasks.retain(|task| query.matches(task));
     }
 
     tasks.sort_by_urgency();
