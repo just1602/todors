@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use crate::error::{OptionExt, Result, ResultExt, TaskError};
+use crate::error::{AppError, ConfigError, EnvironmentError, OptionExt, Result, ResultExt};
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -12,14 +12,14 @@ pub struct Config {
 impl Config {
     pub fn from_path(config_file_path: PathBuf) -> Result<Self> {
         let config_file_content = std::fs::read(&config_file_path)
-            .context_transform(TaskError::Io)
+            .context_transform(|err| AppError::from(ConfigError::Io(err)))
             .attach_with(|| format!("config file: {}", config_file_path.display()))?;
         let config_file_content = std::str::from_utf8(&config_file_content)
-            .context_transform(TaskError::Utf8)
+            .context_transform(|err| AppError::from(ConfigError::Utf8(err)))
             .attach_with(|| format!("config file: {}", config_file_path.display()))?;
 
         Ok(toml::from_str(config_file_content)
-            .context_transform(TaskError::Toml)
+            .context_transform(|err| AppError::from(ConfigError::Toml(err)))
             .attach_with(|| format!("config file: {}", config_file_path.display()))?)
     }
 
@@ -27,7 +27,7 @@ impl Config {
         let base_path = if self.todo_dir.starts_with("~") {
             let home_path = std::env::var("HOME")
                 .ok()
-                .context(TaskError::MissingEnv("HOME"))?;
+                .context(AppError::from(EnvironmentError::Missing("HOME")))?;
 
             let folder = self.todo_dir.to_string_lossy();
             let folder = folder.trim_start_matches("~/");

@@ -4,7 +4,7 @@ use clap::Parser;
 use todors::{
     cli::{Cli, Commands},
     config::Config,
-    error::{Result, TaskError, bail},
+    error::{AppError, EnvironmentError, Result, bail},
     handlers::*,
     storage::TaskStorage,
 };
@@ -32,7 +32,9 @@ fn run() -> Result<()> {
     } else if let Ok(home_path) = std::env::var("HOME") {
         PathBuf::from(home_path).join(".config/todors/config.toml")
     } else {
-        bail!(TaskError::MissingEnv("XDG_CONFIG_HOME or HOME"));
+        bail!(AppError::from(EnvironmentError::Missing(
+            "XDG_CONFIG_HOME or HOME"
+        )));
     };
 
     let config = Config::from_path(config_file_path)?;

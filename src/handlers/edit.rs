@@ -1,7 +1,7 @@
 use crate::{
     cli::Edit,
     config::Config,
-    error::{Result, ResultExt, TaskError, bail},
+    error::{AppError, EditorError, Result, ResultExt, bail},
 };
 
 pub fn handle_edit(params: Edit, config: Config) -> Result<()> {
@@ -15,13 +15,11 @@ pub fn handle_edit(params: Edit, config: Config) -> Result<()> {
     let status = cmd
         .arg(config.todo_file()?)
         .status()
-        .context_transform(TaskError::Io)
+        .context_transform(|err| AppError::from(EditorError::Io(err)))
         .attach("opening the todo file in the editor")?;
 
     if !status.success() {
-        bail!(TaskError::Other(format!(
-            "editor exited with status {status}"
-        )));
+        bail!(AppError::from(EditorError::NonZeroStatus(status)));
     }
 
     Ok(())

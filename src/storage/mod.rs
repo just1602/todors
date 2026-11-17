@@ -18,7 +18,7 @@ impl TaskStorage {
 impl TaskStorage {
     pub fn get_all(&self) -> Result<TaskList> {
         let content = std::fs::read_to_string(&self.todo_file)
-            .context_transform(TaskError::Io)
+            .context_transform(TaskError::TodoFileIo)
             .attach_with(|| format!("todo file: {}", self.todo_file.display()))?;
 
         let mut tasks = TaskList::new();
@@ -37,11 +37,11 @@ impl TaskStorage {
             .truncate(true)
             .write(true)
             .open(&self.todo_file)
-            .context_transform(TaskError::Io)
+            .context_transform(TaskError::TodoFileIo)
             .attach_with(|| format!("todo file: {}", self.todo_file.display()))?;
 
         for task in tasks {
-            writeln!(file, "{task}").context_transform(TaskError::Io)?;
+            writeln!(file, "{task}").context_transform(TaskError::TodoFileIo)?;
         }
 
         Ok(())

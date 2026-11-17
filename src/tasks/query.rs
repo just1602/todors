@@ -26,16 +26,16 @@ impl TaskQuery {
 fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> TaskResult<Vec<usize>> {
     let lhs_text = &s[start..dash];
     let Ok(lhs) = lhs_text.parse::<usize>() else {
-        bail!(TaskError::ParseQuery(format!(
-            "invalid index range start: {lhs_text}"
-        )));
+        bail!(TaskError::ParseQuery {
+            detail: format!("invalid index range start: {lhs_text}"),
+        });
     };
 
     let rhs_text = &s[dash + 1..end];
     let Ok(rhs) = rhs_text.parse::<usize>() else {
-        bail!(TaskError::ParseQuery(format!(
-            "invalid index range end: {rhs_text}"
-        )));
+        bail!(TaskError::ParseQuery {
+            detail: format!("invalid index range end: {rhs_text}"),
+        });
     };
 
     Ok((lhs..=rhs).collect())
@@ -169,7 +169,9 @@ impl FromStr for TaskQuery {
         }
 
         let subject = String::from_utf8(subject)
-            .context_transform(TaskError::FromUtf8)?
+            .context_transform(|err| TaskError::ParseQuery {
+                detail: format!("invalid UTF-8 in query: {err}"),
+            })?
             .trim_end()
             .to_string();
 

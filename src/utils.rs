@@ -1,5 +1,5 @@
 use crate::{
-    error::{Result, ResultExt, TaskError},
+    error::{AppError, OutputError, Result, ResultExt},
     tasks::list::TaskList,
 };
 use colored::Colorize;
@@ -24,7 +24,7 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<()> {
             };
         }
         writeln!(handle, "{line}")
-            .context_transform(TaskError::Io)
+            .context_transform(|err| AppError::from(OutputError::Io(err)))
             .attach("writing tasks list to stdout")?;
     }
     writeln!(
@@ -33,12 +33,12 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<()> {
         tasks.len(),
         total
     )
-    .context_transform(TaskError::Io)
+    .context_transform(|err| AppError::from(OutputError::Io(err)))
     .attach("writing tasks list to stdout")?;
 
     handle
         .flush()
-        .context_transform(TaskError::Io)
+        .context_transform(|err| AppError::from(OutputError::Io(err)))
         .attach("flushing stdout")?;
 
     Ok(())
