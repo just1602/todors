@@ -23,6 +23,20 @@ impl TaskQuery {
     }
 }
 
+fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> Result<Vec<usize>, TaskError> {
+    let lhs_text = &s[start..dash];
+    let Ok(lhs) = lhs_text.parse::<usize>() else {
+        return Err(TaskError::FailedToParseQuery);
+    };
+
+    let rhs_text = &s[dash + 1..end];
+    let Ok(rhs) = rhs_text.parse::<usize>() else {
+        return Err(TaskError::FailedToParseQuery);
+    };
+
+    Ok((lhs..=rhs).collect())
+}
+
 impl FromStr for TaskQuery {
     type Err = TaskError;
 
@@ -88,10 +102,7 @@ impl FromStr for TaskQuery {
                     State::Init
                 }
                 (',' | ' ', State::Range(j, k)) => {
-                    // FIXME: handle error correctly here
-                    let lhs = s[j..k].parse::<usize>().unwrap();
-                    let rhs = s[k + 1..i].parse::<usize>().unwrap();
-                    let mut range: Vec<usize> = (lhs..=rhs).collect();
+                    let mut range = parse_index_range(s, j, k, i)?;
                     indexes.append(&mut range);
                     State::Init
                 }
@@ -142,9 +153,7 @@ impl FromStr for TaskQuery {
                 hashtags.push(s[j + 1..].to_string());
             }
             State::Range(j, k) => {
-                let lhs = s[j..k].parse::<usize>().unwrap();
-                let rhs = s[k + 1..].parse::<usize>().unwrap();
-                let mut range: Vec<usize> = (lhs..=rhs).collect();
+                let mut range = parse_index_range(s, j, k, s.len())?;
                 indexes.append(&mut range);
             }
             State::Index(j) => {
@@ -155,7 +164,10 @@ impl FromStr for TaskQuery {
             _ => {}
         }
 
-        let subject = String::from_utf8(subject).unwrap().trim_end().to_string();
+        let subject = String::from_utf8(subject)
+            .map_err(|_| TaskError::FailedToParseQuery)?
+            .trim_end()
+            .to_string();
 
         Ok(TaskQuery {
             indexes,
