@@ -8,15 +8,17 @@ use todors::{
 };
 
 fn main() {
-    let cli = Cli::parse();
+    let Cli {
+        config_path,
+        command,
+    } = Cli::parse();
 
-    let config_file_path = if let Some(path) = &cli.config_path {
-        // FIXME: is there a way to not clone here
-        path.clone()
+    let config_file_path = if let Some(path) = config_path {
+        path
     } else if let Ok(path) = std::env::var("XDG_CONFIG_HOME") {
-        PathBuf::from(format!("{path}/todors/config.toml"))
+        PathBuf::from(path).join("todors/config.toml")
     } else if let Ok(home_path) = std::env::var("HOME") {
-        PathBuf::from(format!("{home_path}/.config/todors/config.toml"))
+        PathBuf::from(home_path).join(".config/todors/config.toml")
     } else {
         std::process::exit(1);
     };
@@ -24,7 +26,7 @@ fn main() {
     let config = Config::from_path(config_file_path);
     let storage = TaskStorage::new(config.todo_file());
 
-    let result = match cli.command {
+    let result = match command {
         Commands::Add(params) => handle_add(params, storage),
         Commands::Done(params) => handle_done(params, storage),
         Commands::List(params) => handle_list(params, storage),
