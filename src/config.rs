@@ -18,9 +18,9 @@ impl Config {
             .context_transform(|err| AppError::from(ConfigError::Utf8(err)))
             .attach_with(|| format!("config file: {}", config_file_path.display()))?;
 
-        Ok(toml::from_str(config_file_content)
+        toml::from_str(config_file_content)
             .context_transform(|err| AppError::from(ConfigError::Toml(err)))
-            .attach_with(|| format!("config file: {}", config_file_path.display()))?)
+            .attach_with(|| format!("config file: {}", config_file_path.display()))
     }
 
     pub fn todo_file(&self) -> AppResult<PathBuf> {
