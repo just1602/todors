@@ -71,8 +71,8 @@ impl Display for Task {
             }
         }
 
-        if self.priority.is_some() && !self.completed {
-            f.write_fmt(format_args!("({}) ", self.priority.unwrap()))?;
+        if let Some(priority) = self.priority.filter(|_| !self.completed) {
+            f.write_fmt(format_args!("({priority}) "))?;
         }
 
         if let Some(created_at) = self.created_at {
@@ -306,11 +306,9 @@ impl Task {
             urgency -= 30;
         }
 
-        let due_start_to_be_urgent = Local::now()
-            .date_naive()
-            // FIXME: make the number of days configurable
-            .checked_sub_days(Days::new(2))
-            .expect("Failed to compute the day when due tasks become urgent.");
+        let today = Local::now().date_naive();
+        // FIXME: make the number of days configurable
+        let due_start_to_be_urgent = today.checked_sub_days(Days::new(2)).unwrap_or(today);
         if self
             .due_date
             .is_some_and(|date| date <= due_start_to_be_urgent)
@@ -328,10 +326,7 @@ impl Task {
 
         urgency += pri_urgency;
 
-        let one_month_ago = Local::now()
-            .date_naive()
-            .checked_sub_months(Months::new(1))
-            .expect("Failed to compute 1 month ago.");
+        let one_month_ago = today.checked_sub_months(Months::new(1)).unwrap_or(today);
 
         if self.created_at.is_some_and(|date| date <= one_month_ago) {
             urgency += 2;
