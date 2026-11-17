@@ -14,10 +14,8 @@ serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.2"
 colored = "3"
 rootcause = "0.13"
-thiserror = "2"
-
-[dev-dependencies]
 tempfile = "3.27"
+thiserror = "2"
 
 # Dependencies to generate shells complication
 [build-dependencies]

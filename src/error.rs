@@ -7,7 +7,7 @@ pub use app::{AppError, ConfigError, EditorError, EnvironmentError, OutputError}
 pub use rootcause::Report;
 pub use rootcause::bail;
 pub use rootcause::option_ext::OptionExt;
-pub use rootcause::prelude::ResultExt;
+pub use rootcause::prelude::{IteratorExt, ResultExt};
 pub use rootcause::report;
 pub use task::TaskError;
 
