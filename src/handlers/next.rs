@@ -16,7 +16,9 @@ pub fn handle_next(params: Next, storage: TaskStorage) -> AppResult<()> {
         tasks = tasks.filter_from_query(&query).collect();
     }
 
-    if let Some(task) = tasks.sort_by_urgency().first() {
+    tasks.sort_by_urgency();
+
+    if let Some(task) = tasks.first() {
         // FIXME: remove this clone
         // TODO: check if this function can take a slice instead
         print_tasks_list(&vec![task.clone()], total)?;

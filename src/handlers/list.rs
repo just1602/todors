@@ -20,7 +20,7 @@ pub fn handle_list(params: List, storage: TaskStorage) -> AppResult<()> {
         tasks = tasks.filter_from_query(&query).collect();
     }
 
-    tasks = tasks.sort_by_urgency();
+    tasks.sort_by_urgency();
     print_tasks_list(&tasks, total)?;
     Ok(())
 }
