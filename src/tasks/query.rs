@@ -5,6 +5,8 @@ use chrono::NaiveDate;
 
 use crate::error::{Report, TaskError, TaskResult, bail, report};
 
+use super::task::Task;
+
 #[derive(Debug)]
 pub struct TaskQuery {
     pub indexes: Vec<usize>,
@@ -39,6 +41,44 @@ impl TaskQuery {
         let query = v.join(" ");
 
         query.parse()
+    }
+
+    pub fn matches(&self, task: &Task) -> bool {
+        if self.indexes.contains(&task.id) {
+            return true;
+        }
+
+        if task
+            .projects
+            .iter()
+            .any(|project| self.projects.contains(project))
+        {
+            return true;
+        }
+
+        if task
+            .contexts
+            .iter()
+            .any(|context| self.contexts.contains(context))
+        {
+            return true;
+        }
+
+        if task
+            .hashtags
+            .iter()
+            .any(|hashtag| self.hashtags.contains(hashtag))
+        {
+            return true;
+        }
+
+        if let Some(due_date) = self.due_date
+            && task.due_date.is_some_and(|date| date == due_date)
+        {
+            return true;
+        }
+
+        !self.subject.is_empty() && task.subject.contains(&self.subject)
     }
 }
 
@@ -213,7 +253,7 @@ impl FromStr for TaskQuery {
 #[cfg(test)]
 mod tests {
 
-    use super::TaskQuery;
+    use super::{super::task::Task, TaskQuery};
     use crate::error::TaskError;
     use chrono::NaiveDate;
     use std::collections::HashMap;
@@ -333,5 +373,43 @@ mod tests {
 
         assert!(message.contains("failed to parse query"), "{message}");
         assert!(message.contains("invalid index range end"), "{message}");
+    }
+
+    fn sample_task() -> Task {
+        Task {
+            id: 2,
+            subject: "write docs".to_owned(),
+            projects: vec!["docs".to_owned()],
+            contexts: vec!["home".to_owned()],
+            hashtags: vec!["next".to_owned()],
+            due_date: NaiveDate::from_ymd_opt(2024, 8, 1),
+            ..Task::default()
+        }
+    }
+
+    #[test]
+    fn it_matches_tasks_by_every_query_field() {
+        let task = sample_task();
+
+        for query in ["2", "+docs", "@home", "#next", "due:2024-08-01", "write"] {
+            assert!(
+                query.parse::<TaskQuery>().unwrap().matches(&task),
+                "query should match: {query}"
+            );
+        }
+    }
+
+    #[test]
+    fn it_does_not_match_when_no_query_field_matches() {
+        let task = sample_task();
+
+        for query in ["999", "+other", "@work", "#later", "due:2024-08-02", "read"] {
+            assert!(
+                !query.parse::<TaskQuery>().unwrap().matches(&task),
+                "query should not match: {query}"
+            );
+        }
+
+        assert!(!TaskQuery::from_string_vec(&[]).unwrap().matches(&task));
     }
 }
