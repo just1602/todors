@@ -10,9 +10,7 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
 
     // FIXME: find the right way to display colors for completed and prioritized tasks
     // Maybe the solution is to put the logic in list item
-    let width: usize = ((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1)
-        .try_into()
-        .expect("Failed to parse task list length width");
+    let width = usize::try_from((tasks.len() + 1).checked_ilog10().unwrap_or(0) + 1).unwrap_or(1);
     for task in tasks {
         let mut line = format!("{:0width$}) {}", task.id, task, width = width);
         if let Some(priority) = task.priority {
@@ -23,25 +21,24 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
                 _ => line.blue().bold().to_string(),
             };
         }
-        match writeln!(handle, "{line}") {
-            Ok(_) => {}
-            Err(err) => {
-                eprint!("Failed to write tasks list to stdout: {err}");
-                return Err(TaskError::FailedToWriteToStdout);
-            }
+        if let Err(err) = writeln!(handle, "{line}") {
+            eprint!("Failed to write tasks list to stdout: {err}");
+            return Err(TaskError::FailedToWriteToStdout);
         }
     }
-    match writeln!(
+    if let Err(err) = writeln!(
         handle,
         "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n{}/{} tasks where printed",
         tasks.len(),
         total
     ) {
-        Ok(_) => {}
-        Err(err) => {
-            eprint!("Failed to write tasks list to stdout: {err}");
-            return Err(TaskError::FailedToWriteToStdout);
-        }
+        eprint!("Failed to write tasks list to stdout: {err}");
+        return Err(TaskError::FailedToWriteToStdout);
+    }
+
+    if let Err(err) = handle.flush() {
+        eprint!("Failed to write tasks list to stdout: {err}");
+        return Err(TaskError::FailedToWriteToStdout);
     }
 
     Ok(())
