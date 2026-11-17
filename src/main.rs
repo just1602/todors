@@ -1,13 +1,25 @@
+use std::{path::PathBuf, process::ExitCode};
+
 use clap::Parser;
-use std::path::PathBuf;
 use todors::{
     cli::{Cli, Commands},
     config::Config,
     handlers::*,
     storage::TaskStorage,
+    tasks::error::TaskError,
 };
 
-fn main() {
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("{err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> Result<(), TaskError> {
     let Cli {
         config_path,
         command,
@@ -26,7 +38,7 @@ fn main() {
     let config = Config::from_path(config_file_path);
     let storage = TaskStorage::new(config.todo_file());
 
-    let result = match command {
+    match command {
         Commands::Add(params) => handle_add(params, storage),
         Commands::Done(params) => handle_done(params, storage),
         Commands::List(params) => handle_list(params, storage),
@@ -37,9 +49,5 @@ fn main() {
         Commands::Clean(params) => handle_clean(params, storage),
         Commands::Modify(params) => handle_modify(params, storage),
         Commands::Next(params) => handle_next(params, storage),
-    };
-
-    if let Err(err) = result {
-        eprintln!("An error occured: {err}");
     }
 }
