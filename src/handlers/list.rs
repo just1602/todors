@@ -1,12 +1,13 @@
 use crate::{
     cli::List,
+    error::Result,
     storage::TaskStorage,
-    tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
+    tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
 use crate::utils::print_tasks_list;
 
-pub fn handle_list(params: List, storage: TaskStorage) -> Result<(), TaskError> {
+pub fn handle_list(params: List, storage: TaskStorage) -> Result<()> {
     let mut tasks = storage.get_all()?;
     let total = tasks.len();
 

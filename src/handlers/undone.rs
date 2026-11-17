@@ -1,10 +1,11 @@
 use crate::{
     cli::Undone,
+    error::Result,
     storage::TaskStorage,
-    tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
+    tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
-pub fn handle_undone(params: Undone, storage: TaskStorage) -> Result<(), TaskError> {
+pub fn handle_undone(params: Undone, storage: TaskStorage) -> Result<()> {
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(&params.query)?;
 

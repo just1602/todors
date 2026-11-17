@@ -1,6 +1,9 @@
 use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
-use crate::tasks::{error::TaskError, list::TaskList, task::Task};
+use crate::{
+    error::{Result, ResultExt, TaskError},
+    tasks::{list::TaskList, task::Task},
+};
 
 pub struct TaskStorage {
     todo_file: PathBuf,
@@ -13,10 +16,10 @@ impl TaskStorage {
 }
 
 impl TaskStorage {
-    pub fn get_all(&self) -> Result<TaskList, TaskError> {
-        let Ok(content) = std::fs::read_to_string(&self.todo_file) else {
-            return Err(TaskError::FailedToOpenTodoFile);
-        };
+    pub fn get_all(&self) -> Result<TaskList> {
+        let content = std::fs::read_to_string(&self.todo_file)
+            .context_transform(TaskError::Io)
+            .attach_with(|| format!("todo file: {}", self.todo_file.display()))?;
 
         let mut tasks = TaskList::new();
         for (idx, line) in content.lines().enumerate() {
@@ -28,23 +31,17 @@ impl TaskStorage {
         Ok(tasks)
     }
 
-    pub fn persist(&self, tasks: TaskList) -> Result<(), TaskError> {
-        let mut file = if let Ok(file) = OpenOptions::new()
+    pub fn persist(&self, tasks: TaskList) -> Result<()> {
+        let mut file = OpenOptions::new()
             .create(true)
             .truncate(true)
             .write(true)
             .open(&self.todo_file)
-        {
-            file
-        } else {
-            return Err(TaskError::FailedToOpenTodoFile);
-        };
+            .context_transform(TaskError::Io)
+            .attach_with(|| format!("todo file: {}", self.todo_file.display()))?;
 
         for task in tasks {
-            match file.write_fmt(format_args!("{task}\n")) {
-                Ok(_) => {}
-                Err(_) => return Err(TaskError::FailedToSave),
-            }
+            writeln!(file, "{task}").context_transform(TaskError::Io)?;
         }
 
         Ok(())

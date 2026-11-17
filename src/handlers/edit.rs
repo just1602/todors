@@ -1,23 +1,27 @@
-use crate::{cli::Edit, config::Config, tasks::error::TaskError};
+use crate::{
+    cli::Edit,
+    config::Config,
+    error::{Result, ResultExt, TaskError, bail},
+};
 
-pub fn handle_edit(params: Edit, config: Config) -> Result<(), TaskError> {
-    let editor = match std::env::var("EDITOR") {
-        Ok(value) => value,
-        // TODO: check if nvim -> vim -> nano is in the path, else bailout
-        // TODO: add (better) loggin / log that if you want to chose the editor, set the EDITOR env
-        // var
-        Err(_) => "nvim".to_string(),
-    };
+pub fn handle_edit(params: Edit, config: Config) -> Result<()> {
+    let editor = std::env::var("EDITOR").unwrap_or_else(|_| "nvim".to_string());
     let mut cmd = std::process::Command::new(editor);
 
     if let Some(item) = params.item {
         cmd.arg(format!("+{item}"));
     }
 
-    if let Err(e) = cmd.arg(config.todo_file()).status() {
-        // TODO: use a logging library instead of `eprintln!`
-        eprintln!("Failed to edit the todo file: {e}");
-        return Err(TaskError::FailedToOpenTodoFile);
+    let status = cmd
+        .arg(config.todo_file()?)
+        .status()
+        .context_transform(TaskError::Io)
+        .attach("opening the todo file in the editor")?;
+
+    if !status.success() {
+        bail!(TaskError::Other(format!(
+            "editor exited with status {status}"
+        )));
     }
 
     Ok(())

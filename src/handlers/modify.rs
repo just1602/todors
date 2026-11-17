@@ -1,11 +1,12 @@
 use crate::{
     cli::Modify,
+    error::Result,
     storage::TaskStorage,
-    tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
+    tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
 // TODO: https://github.com/just1602/todors/issues/5
-pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<(), TaskError> {
+pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<()> {
     let mut tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(&params.query)?;
 

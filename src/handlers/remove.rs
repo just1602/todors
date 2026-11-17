@@ -1,10 +1,11 @@
 use crate::{
     cli::Remove,
+    error::Result,
     storage::TaskStorage,
-    tasks::{error::TaskError, list::TaskListTrait, query::TaskQuery},
+    tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
-pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<(), TaskError> {
+pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<()> {
     let tasks = storage.get_all()?;
     let query = TaskQuery::from_string_vec(&params.query)?;
 

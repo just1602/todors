@@ -1,4 +1,4 @@
-use crate::tasks::error::TaskError;
+use crate::error::{Result as TaskResult, ResultExt, TaskError, bail};
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -16,29 +16,33 @@ pub struct TaskQuery {
 }
 
 impl TaskQuery {
-    pub fn from_string_vec(v: &[String]) -> Result<TaskQuery, TaskError> {
+    pub fn from_string_vec(v: &[String]) -> TaskResult<TaskQuery> {
         let query = v.join(" ");
 
         query.parse()
     }
 }
 
-fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> Result<Vec<usize>, TaskError> {
+fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> TaskResult<Vec<usize>> {
     let lhs_text = &s[start..dash];
     let Ok(lhs) = lhs_text.parse::<usize>() else {
-        return Err(TaskError::FailedToParseQuery);
+        bail!(TaskError::ParseQuery(format!(
+            "invalid index range start: {lhs_text}"
+        )));
     };
 
     let rhs_text = &s[dash + 1..end];
     let Ok(rhs) = rhs_text.parse::<usize>() else {
-        return Err(TaskError::FailedToParseQuery);
+        bail!(TaskError::ParseQuery(format!(
+            "invalid index range end: {rhs_text}"
+        )));
     };
 
     Ok((lhs..=rhs).collect())
 }
 
 impl FromStr for TaskQuery {
-    type Err = TaskError;
+    type Err = rootcause::Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         #[derive(Clone, Copy, Debug, PartialEq)]
@@ -165,7 +169,7 @@ impl FromStr for TaskQuery {
         }
 
         let subject = String::from_utf8(subject)
-            .map_err(|_| TaskError::FailedToParseQuery)?
+            .context_transform(TaskError::FromUtf8)?
             .trim_end()
             .to_string();
 
@@ -288,5 +292,14 @@ mod tests {
             query.tags,
             HashMap::from([("team".to_string(), "sre".to_string())])
         );
+    }
+
+    #[test]
+    fn it_reports_an_invalid_index_range() {
+        let err = "2-".parse::<TaskQuery>().unwrap_err();
+        let message = format!("{err}");
+
+        assert!(message.contains("failed to parse query"), "{message}");
+        assert!(message.contains("invalid index range end"), "{message}");
     }
 }

@@ -2,26 +2,32 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
+use crate::error::{OptionExt, Result, ResultExt, TaskError};
+
 #[derive(Deserialize)]
 pub struct Config {
     pub todo_dir: PathBuf,
 }
 
 impl Config {
-    // TODO: Create `config/error.rs` and instead of using expect, catch error and return the right
-    // error type
-    pub fn from_path(config_file_path: PathBuf) -> Self {
-        let config_file_content =
-            std::fs::read(config_file_path).expect("Failed to read config file");
+    pub fn from_path(config_file_path: PathBuf) -> Result<Self> {
+        let config_file_content = std::fs::read(&config_file_path)
+            .context_transform(TaskError::Io)
+            .attach_with(|| format!("config file: {}", config_file_path.display()))?;
         let config_file_content = std::str::from_utf8(&config_file_content)
-            .expect("Failed to convert file content to str.");
+            .context_transform(TaskError::Utf8)
+            .attach_with(|| format!("config file: {}", config_file_path.display()))?;
 
-        toml::from_str(config_file_content).expect("Failed to parse config file.")
+        Ok(toml::from_str(config_file_content)
+            .context_transform(TaskError::Toml)
+            .attach_with(|| format!("config file: {}", config_file_path.display()))?)
     }
 
-    pub fn todo_file(&self) -> PathBuf {
+    pub fn todo_file(&self) -> Result<PathBuf> {
         let base_path = if self.todo_dir.starts_with("~") {
-            let home_path = std::env::var("HOME").expect("Failed to retrieve HOME dir path");
+            let home_path = std::env::var("HOME")
+                .ok()
+                .context(TaskError::MissingEnv("HOME"))?;
 
             let folder = self.todo_dir.to_string_lossy();
             let folder = folder.trim_start_matches("~/");
@@ -31,7 +37,7 @@ impl Config {
             self.todo_dir.clone()
         };
 
-        base_path.join("todo.txt")
+        Ok(base_path.join("todo.txt"))
     }
 }
 
@@ -46,7 +52,12 @@ mod tests {
             todo_dir: PathBuf::from("/home/test/.todo"),
         };
 
-        assert!(config.todo_file().ends_with("/home/test/.todo/todo.txt"));
+        assert!(
+            config
+                .todo_file()
+                .unwrap()
+                .ends_with("/home/test/.todo/todo.txt")
+        );
     }
 
     #[test]
@@ -55,7 +66,27 @@ mod tests {
             todo_dir: PathBuf::from("~/.todo"),
         };
 
-        assert!(!config.todo_file().starts_with("~"));
-        assert!(config.todo_file().ends_with(".todo/todo.txt"));
+        let todo_file = config.todo_file().unwrap();
+
+        assert!(!todo_file.starts_with("~"));
+        assert!(todo_file.ends_with(".todo/todo.txt"));
+    }
+
+    #[test]
+    fn it_reports_invalid_toml() {
+        let config_file = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(config_file.path(), "todo_dir = ").unwrap();
+
+        let err = match Config::from_path(config_file.path().to_path_buf()) {
+            Ok(_) => panic!("invalid TOML should be rejected"),
+            Err(err) => err,
+        };
+        let message = format!("{err}");
+
+        assert!(message.contains("invalid TOML"), "{message}");
+        assert!(
+            message.contains(&format!("config file: {}", config_file.path().display())),
+            "{message}"
+        );
     }
 }

@@ -1,10 +1,12 @@
-use crate::tasks::error::TaskError;
-use crate::tasks::list::TaskList;
+use crate::{
+    error::{Result, ResultExt, TaskError},
+    tasks::list::TaskList,
+};
 use colored::Colorize;
 use std::io;
 use std::io::Write;
 
-pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError> {
+pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<()> {
     let stdout = io::stdout();
     let mut handle = io::BufWriter::new(stdout);
 
@@ -21,25 +23,23 @@ pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<(), TaskError>
                 _ => line.blue().bold().to_string(),
             };
         }
-        if let Err(err) = writeln!(handle, "{line}") {
-            eprint!("Failed to write tasks list to stdout: {err}");
-            return Err(TaskError::FailedToWriteToStdout);
-        }
+        writeln!(handle, "{line}")
+            .context_transform(TaskError::Io)
+            .attach("writing tasks list to stdout")?;
     }
-    if let Err(err) = writeln!(
+    writeln!(
         handle,
         "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n{}/{} tasks where printed",
         tasks.len(),
         total
-    ) {
-        eprint!("Failed to write tasks list to stdout: {err}");
-        return Err(TaskError::FailedToWriteToStdout);
-    }
+    )
+    .context_transform(TaskError::Io)
+    .attach("writing tasks list to stdout")?;
 
-    if let Err(err) = handle.flush() {
-        eprint!("Failed to write tasks list to stdout: {err}");
-        return Err(TaskError::FailedToWriteToStdout);
-    }
+    handle
+        .flush()
+        .context_transform(TaskError::Io)
+        .attach("flushing stdout")?;
 
     Ok(())
 }
