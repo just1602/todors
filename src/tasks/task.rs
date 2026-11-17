@@ -323,6 +323,10 @@ impl Task {
     }
 
     pub fn complete(&mut self) {
+        if let Some(priority) = self.priority {
+            self.tags.insert("pri".to_owned(), priority.to_string());
+        }
+
         self.completed = true;
         self.completed_at = Some(Local::now().date_naive());
         self.priority = None;
@@ -331,8 +335,15 @@ impl Task {
     pub fn undo(&mut self) {
         self.completed = false;
         self.completed_at = None;
-        // FIXME: if there's a priority, keep it in the description like `pri:value` so we can
-        // bring it back
+
+        if let Some(priority) = self.tags.remove("pri") {
+            let mut chars = priority.chars();
+            if let (Some(priority), None) = (chars.next(), chars.next())
+                && priority.is_ascii_uppercase()
+            {
+                self.priority = Some(priority);
+            }
+        }
     }
 
     pub fn compute_urgency(&self) -> i32 {
@@ -681,6 +692,33 @@ mod tests {
         assert_eq!(task.priority, None);
         assert_eq!(task.completed_at, Some(Local::now().date_naive()));
         assert!(task.completed);
+        assert_eq!(task.tags.get("pri").map(String::as_str), Some("A"));
+    }
+
+    #[test]
+    fn it_round_trips_priority_through_completion_and_undo() {
+        let mut task = Task {
+            subject: "Some task to do".to_string(),
+            priority: Some('B'),
+            ..Task::default()
+        };
+
+        task.complete();
+        let completed_line = task.to_string();
+        let mut parsed = Task::from_str(1, &completed_line).unwrap();
+
+        assert_eq!(parsed.priority, None);
+        assert_eq!(parsed.tags.get("pri").map(String::as_str), Some("B"));
+
+        parsed.undo();
+
+        assert_eq!(parsed.priority, Some('B'));
+        assert!(!parsed.tags.contains_key("pri"));
+        assert!(!parsed.completed);
+        assert_eq!(
+            parsed.to_string(),
+            format!("(B) {} Some task to do", Local::now().date_naive())
+        );
     }
 
     #[test]
