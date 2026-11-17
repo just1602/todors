@@ -8,6 +8,7 @@ pub use rootcause::Report;
 pub use rootcause::bail;
 pub use rootcause::option_ext::OptionExt;
 pub use rootcause::prelude::ResultExt;
+pub use rootcause::report;
 pub use task::TaskError;
 
 pub type TaskResult<T> = std::result::Result<T, Report<TaskError>>;

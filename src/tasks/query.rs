@@ -1,8 +1,9 @@
-use crate::error::{Report, ResultExt, TaskError, TaskResult, bail};
 use std::collections::HashMap;
 use std::str::FromStr;
 
 use chrono::NaiveDate;
+
+use crate::error::{Report, TaskError, TaskResult, bail, report};
 
 #[derive(Debug)]
 pub struct TaskQuery {
@@ -15,6 +16,24 @@ pub struct TaskQuery {
     pub subject: String,
 }
 
+fn query_slice(source: &str, start: usize, end: usize) -> TaskResult<&str> {
+    source.get(start..end).ok_or_else(|| {
+        report!(TaskError::ParseQuery {
+            detail: "invalid byte range in query".to_owned(),
+        })
+    })
+}
+
+fn append_query_slice(
+    subject: &mut String,
+    source: &str,
+    start: usize,
+    end: usize,
+) -> TaskResult<()> {
+    subject.push_str(query_slice(source, start, end)?);
+    Ok(())
+}
+
 impl TaskQuery {
     pub fn from_string_vec(v: &[String]) -> TaskResult<TaskQuery> {
         let query = v.join(" ");
@@ -24,14 +43,14 @@ impl TaskQuery {
 }
 
 fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> TaskResult<Vec<usize>> {
-    let lhs_text = &s[start..dash];
+    let lhs_text = query_slice(s, start, dash)?;
     let Ok(lhs) = lhs_text.parse::<usize>() else {
         bail!(TaskError::ParseQuery {
             detail: format!("invalid index range start: {lhs_text}"),
         });
     };
 
-    let rhs_text = &s[dash + 1..end];
+    let rhs_text = query_slice(s, dash + 1, end)?;
     let Ok(rhs) = rhs_text.parse::<usize>() else {
         bail!(TaskError::ParseQuery {
             detail: format!("invalid index range end: {rhs_text}"),
@@ -58,7 +77,7 @@ impl FromStr for TaskQuery {
         }
 
         let mut state = State::Init;
-        let mut subject = Vec::new();
+        let mut subject = String::new();
         let mut indexes = Vec::new();
         let mut projects = Vec::new();
         let mut contexts = Vec::new();
@@ -67,6 +86,7 @@ impl FromStr for TaskQuery {
         let mut due_date = None;
 
         for (i, c) in s.char_indices() {
+            let char_end = i + c.len_utf8();
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
@@ -75,34 +95,36 @@ impl FromStr for TaskQuery {
                 ('A'..='z', State::Init) => State::TagBegin(i),
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
                 (' ', State::TagBegin(j)) => {
-                    subject.extend(&s.as_bytes()[j..i + 1]);
-
+                    append_query_slice(&mut subject, s, j, char_end)?;
                     State::Init
                 }
                 (' ', State::Project(j)) => {
-                    if i - j > 1 {
-                        projects.push(s[j + 1..i].to_string());
+                    if i > j + 1 {
+                        projects.push(query_slice(s, j + 1, i)?.to_string());
                     }
                     State::Init
                 }
                 (' ', State::Context(j)) => {
-                    if i - j > 1 {
-                        contexts.push(s[j + 1..i].to_string());
+                    if i > j + 1 {
+                        contexts.push(query_slice(s, j + 1, i)?.to_string());
                     }
                     State::Init
                 }
                 (' ', State::HashTag(j)) => {
-                    if i - j > 1 {
-                        hashtags.push(s[j + 1..i].to_string());
+                    if i > j + 1 {
+                        hashtags.push(query_slice(s, j + 1, i)?.to_string());
                     }
                     State::Init
                 }
                 ('-', State::Index(j)) => State::Range(j, i),
-                // FIXME: test this correctly to see if all the cases works
                 (',' | ' ', State::Index(j)) => {
-                    if let Ok(idx) = s[j..i].parse::<usize>() {
-                        indexes.push(idx)
-                    }
+                    let text = query_slice(s, j, i)?;
+                    let idx = text.parse::<usize>().map_err(|_| {
+                        report!(TaskError::ParseQuery {
+                            detail: format!("invalid index: {text}"),
+                        })
+                    })?;
+                    indexes.push(idx);
                     State::Init
                 }
                 (',' | ' ', State::Range(j, k)) => {
@@ -111,69 +133,70 @@ impl FromStr for TaskQuery {
                     State::Init
                 }
                 (' ', State::TagEnd(j, k)) => {
-                    if i - k > 1 {
-                        match &s[j..k] {
-                            "due" => {
-                                due_date = s[k + 1..i].parse::<NaiveDate>().ok();
-                            }
-                            tag => {
-                                tags.insert(tag.to_string(), s[k + 1..i].to_string());
-                            }
+                    if i > k + 1 {
+                        let tag = query_slice(s, j, k)?;
+                        let value = query_slice(s, k + 1, i)?;
+                        if tag == "due" {
+                            due_date = value.parse::<NaiveDate>().ok();
+                        } else {
+                            tags.insert(tag.to_string(), value.to_string());
                         }
                     }
                     State::Init
                 }
-
                 _ => state,
             };
 
             if new_state == State::Init && state == State::Init {
-                subject.push(s.as_bytes()[i])
+                subject.push(c);
             }
 
-            state = new_state
+            state = new_state;
         }
 
-        // parse current tag when we hit EOL
         match state {
-            State::TagEnd(j, k) => match &s[j..k] {
-                "due" => {
-                    due_date = s[k + 1..].parse::<NaiveDate>().ok();
+            State::TagEnd(j, k) if s.len() > k + 1 => {
+                let tag = query_slice(s, j, k)?;
+                let value = query_slice(s, k + 1, s.len())?;
+                if tag == "due" {
+                    due_date = value.parse::<NaiveDate>().ok();
+                } else {
+                    tags.insert(tag.to_string(), value.to_string());
                 }
-                tag => {
-                    tags.insert(tag.to_string(), s[k + 1..].to_string());
-                }
-            },
+            }
             State::TagBegin(j) => {
-                subject.extend(&s.as_bytes()[j..]);
+                append_query_slice(&mut subject, s, j, s.len())?;
             }
             State::Project(j) => {
-                projects.push(s[j + 1..].to_string());
+                if s.len() > j + 1 {
+                    projects.push(query_slice(s, j + 1, s.len())?.to_string());
+                }
             }
             State::Context(j) => {
-                contexts.push(s[j + 1..].to_string());
+                if s.len() > j + 1 {
+                    contexts.push(query_slice(s, j + 1, s.len())?.to_string());
+                }
             }
             State::HashTag(j) => {
-                hashtags.push(s[j + 1..].to_string());
+                if s.len() > j + 1 {
+                    hashtags.push(query_slice(s, j + 1, s.len())?.to_string());
+                }
             }
             State::Range(j, k) => {
                 let mut range = parse_index_range(s, j, k, s.len())?;
                 indexes.append(&mut range);
             }
             State::Index(j) => {
-                if let Ok(idx) = s[j..].parse::<usize>() {
-                    indexes.push(idx)
-                }
+                let text = query_slice(s, j, s.len())?;
+                let idx = text.parse::<usize>().map_err(|_| {
+                    report!(TaskError::ParseQuery {
+                        detail: format!("invalid index: {text}"),
+                    })
+                })?;
+                indexes.push(idx);
             }
             _ => {}
         }
-
-        let subject = String::from_utf8(subject)
-            .context_transform(|err| TaskError::ParseQuery {
-                detail: format!("invalid UTF-8 in query: {err}"),
-            })?
-            .trim_end()
-            .to_string();
 
         Ok(TaskQuery {
             indexes,
@@ -182,7 +205,7 @@ impl FromStr for TaskQuery {
             hashtags,
             due_date,
             tags,
-            subject,
+            subject: subject.trim_end().to_string(),
         })
     }
 }

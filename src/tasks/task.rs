@@ -1,7 +1,7 @@
 use chrono::{Days, Local, Months, NaiveDate};
 use std::{collections::HashMap, fmt::Display};
 
-use crate::error::TaskResult;
+use crate::error::{TaskError, TaskResult, bail, report};
 
 // TODO: handle recurrences
 // TODO: migrate away from String to &str
@@ -93,41 +93,94 @@ impl Display for Task {
     }
 }
 
-impl Task {
-    // The original implementation of this trait is highly inspired by this one:
-    // https://github.com/kstep/todotxt.rs/blob/master/src/lib.rs
+const TODO_DATE_LEN: usize = 10;
 
+fn split_date_prefix(s: &str) -> Option<(NaiveDate, &str)> {
+    let date_text = s.get(..TODO_DATE_LEN)?;
+    let rest = s.get(TODO_DATE_LEN..)?.strip_prefix(' ')?;
+    let date = date_text.parse::<NaiveDate>().ok()?;
+    Some((date, rest))
+}
+
+fn split_priority(s: &str, line: usize) -> TaskResult<Option<(char, &str)>> {
+    let Some(after_open) = s.strip_prefix('(') else {
+        return Ok(None);
+    };
+
+    let mut chars = after_open.chars();
+    let Some(priority) = chars.next() else {
+        return Ok(None);
+    };
+
+    if chars.next() != Some(')') || chars.next() != Some(' ') {
+        return Ok(None);
+    }
+
+    if !priority.is_ascii_uppercase() {
+        bail!(TaskError::InvalidPriority(priority));
+    }
+
+    let Some(rest) = s.get(4..) else {
+        bail!(TaskError::ParseTask {
+            line,
+            detail: "invalid byte boundary after priority".to_owned(),
+        });
+    };
+
+    Ok(Some((priority, rest)))
+}
+
+fn task_slice(source: &str, start: usize, end: usize, line: usize) -> TaskResult<&str> {
+    source.get(start..end).ok_or_else(|| {
+        report!(TaskError::ParseTask {
+            line,
+            detail: "invalid byte boundary while parsing task".to_owned(),
+        })
+    })
+}
+
+fn append_task_slice(
+    subject: &mut String,
+    source: &str,
+    start: usize,
+    end: usize,
+    line: usize,
+) -> TaskResult<()> {
+    subject.push_str(task_slice(source, start, end, line)?);
+    Ok(())
+}
+
+impl Task {
     pub fn from_str(id: usize, mut s: &str) -> TaskResult<Self> {
-        let (completed, mut completed_at) = if s.starts_with("x ") {
-            s = &s[2..];
-            (true, s[..10].parse::<NaiveDate>().ok())
+        let (completed, mut completed_at) = if let Some(after_x) = s.strip_prefix("x ") {
+            match split_date_prefix(after_x) {
+                Some((date, rest)) => {
+                    s = rest;
+                    (true, Some(date))
+                }
+                None => {
+                    s = after_x;
+                    (true, None)
+                }
+            }
         } else {
             (false, None)
         };
 
-        if completed_at.is_some() {
-            s = &s[11..];
-        }
-
-        let priority = if s.starts_with('(') && &s[2..4] == ") " {
-            match s.as_bytes()[1] as char {
-                p @ 'A'..='Z' => {
-                    s = &s[4..];
-                    Some(p)
-                }
-                _ => None,
+        let priority = match split_priority(s, id)? {
+            Some((priority, rest)) => {
+                s = rest;
+                Some(priority)
             }
-        } else {
-            None
+            None => None,
         };
 
-        let mut created_at = if s.len() < 10 {
-            None
-        } else if let Ok(date) = s[..10].parse::<NaiveDate>() {
-            s = &s[11..];
-            Some(date)
-        } else {
-            None
+        let mut created_at = match split_date_prefix(s) {
+            Some((date, rest)) => {
+                s = rest;
+                Some(date)
+            }
+            None => None,
         };
 
         // If there's no priority and no completion date in the string, the creation date could be
@@ -139,8 +192,6 @@ impl Task {
         }
 
         let buf = s;
-
-        let mut subject = Vec::new();
 
         #[derive(Copy, Clone, PartialEq, Eq)]
         enum State {
@@ -157,13 +208,13 @@ impl Task {
         let mut projects = Vec::new();
         let mut hashtags = Vec::new();
         let mut tags = HashMap::new();
+        let mut subject = String::new();
 
         // Some tag we know about
         let mut due_date = None;
 
-        // NOTE: we must iter on `buf` that way to support non-ascii chars
-        let buf_iter = buf.char_indices();
-        for (i, c) in buf_iter {
+        for (i, c) in buf.char_indices() {
+            let char_end = i + c.len_utf8();
             let new_state = match (c, state) {
                 ('@', State::Init) => State::Context(i),
                 ('+', State::Init) => State::Project(i),
@@ -172,32 +223,31 @@ impl Task {
                 (':', State::TagBegin(j)) => State::TagEnd(j, i),
                 (' ', State::TagBegin(_)) => State::Init,
                 (' ', State::Context(j)) => {
-                    if i - j > 1 {
-                        contexts.push(buf[j + 1..i].to_string());
+                    if i > j + 1 {
+                        contexts.push(task_slice(buf, j + 1, i, id)?.to_string());
                     }
                     State::Init
                 }
                 (' ', State::Project(j)) => {
-                    if i - j > 1 {
-                        projects.push(buf[j + 1..i].to_string());
+                    if i > j + 1 {
+                        projects.push(task_slice(buf, j + 1, i, id)?.to_string());
                     }
                     State::Init
                 }
                 (' ', State::HashTag(j)) => {
-                    if i - j > 1 {
-                        hashtags.push(buf[j + 1..i].to_string());
+                    if i > j + 1 {
+                        hashtags.push(task_slice(buf, j + 1, i, id)?.to_string());
                     }
                     State::Init
                 }
                 (' ', State::TagEnd(j, k)) => {
-                    if i - k > 1 {
-                        match &buf[j..k] {
-                            "due" => {
-                                due_date = buf[k + 1..i].parse::<NaiveDate>().ok();
-                            }
-                            tag => {
-                                tags.insert(tag.to_string(), buf[k + 1..i].to_string());
-                            }
+                    if i > k + 1 {
+                        let tag = task_slice(buf, j, k, id)?;
+                        let value = task_slice(buf, k + 1, i, id)?;
+                        if tag == "due" {
+                            due_date = value.parse::<NaiveDate>().ok();
+                        } else {
+                            tags.insert(tag.to_string(), value.to_string());
                         }
                     }
                     State::Init
@@ -208,9 +258,9 @@ impl Task {
             if new_state == State::Init {
                 match state {
                     State::TagBegin(j) | State::Project(j) | State::Context(j) => {
-                        subject.extend(&buf.as_bytes()[j..i + 1]);
+                        append_task_slice(&mut subject, buf, j, char_end, id)?;
                     }
-                    State::Init => subject.push(buf.as_bytes()[i]),
+                    State::Init => subject.push(c),
                     _ => {}
                 }
             }
@@ -218,40 +268,44 @@ impl Task {
             state = new_state;
         }
 
-        // parse current tag when we hit EOL
         match state {
-            State::TagEnd(j, k) => match &buf[j..k] {
-                "due" => {
-                    due_date = buf[k + 1..].parse::<NaiveDate>().ok();
+            State::TagEnd(j, k) if buf.len() > k + 1 => {
+                let tag = task_slice(buf, j, k, id)?;
+                let value = task_slice(buf, k + 1, buf.len(), id)?;
+                if tag == "due" {
+                    due_date = value.parse::<NaiveDate>().ok();
+                } else {
+                    tags.insert(tag.to_string(), value.to_string());
                 }
-                tag => {
-                    tags.insert(tag.to_string(), buf[k + 1..].to_string());
-                }
-            },
+            }
             State::Project(j) => {
-                projects.push(buf[j + 1..].to_string());
-                subject.extend(&buf.as_bytes()[j..]);
+                if buf.len() > j + 1 {
+                    projects.push(task_slice(buf, j + 1, buf.len(), id)?.to_string());
+                }
+                append_task_slice(&mut subject, buf, j, buf.len(), id)?;
             }
             State::Context(j) => {
-                contexts.push(buf[j + 1..].to_string());
-                subject.extend(&buf.as_bytes()[j..]);
+                if buf.len() > j + 1 {
+                    contexts.push(task_slice(buf, j + 1, buf.len(), id)?.to_string());
+                }
+                append_task_slice(&mut subject, buf, j, buf.len(), id)?;
             }
             State::HashTag(j) => {
-                hashtags.push(buf[j + 1..].to_string());
-                subject.extend(&buf.as_bytes()[j..]);
+                if buf.len() > j + 1 {
+                    hashtags.push(task_slice(buf, j + 1, buf.len(), id)?.to_string());
+                }
+                append_task_slice(&mut subject, buf, j, buf.len(), id)?;
             }
             State::TagBegin(j) => {
-                subject.extend(&buf.as_bytes()[j..]);
+                append_task_slice(&mut subject, buf, j, buf.len(), id)?;
             }
             _ => {}
         }
 
-        // FIXME: find a way to not have to use trim_end every time when it's only needed when the
-        // string end with a tag.
-        let subject = String::from_utf8(subject)
-            .unwrap_or_else(|_| s.to_owned())
-            .trim_end()
-            .to_string();
+        let subject = subject.trim_end().to_string();
+        if subject.is_empty() {
+            bail!(TaskError::EmptySubject);
+        }
 
         Ok(Task {
             id,
@@ -343,6 +397,7 @@ impl Task {
 #[cfg(test)]
 mod tests {
     use super::{HashMap, Local, NaiveDate, Task};
+    use crate::error::TaskError;
 
     #[test]
     fn it_parses_task() {
@@ -626,5 +681,34 @@ mod tests {
         assert_eq!(task.priority, None);
         assert_eq!(task.completed_at, Some(Local::now().date_naive()));
         assert!(task.completed);
+    }
+
+    #[test]
+    fn it_rejects_an_empty_subject() {
+        let err = Task::from_str(1, "").unwrap_err();
+
+        assert!(matches!(err.current_context(), TaskError::EmptySubject));
+    }
+
+    #[test]
+    fn it_rejects_an_invalid_priority() {
+        let err = Task::from_str(1, "(a) a task").unwrap_err();
+
+        assert!(matches!(
+            err.current_context(),
+            TaskError::InvalidPriority('a')
+        ));
+    }
+
+    #[test]
+    fn it_handles_short_malformed_prefixes_without_panicking() {
+        let task = Task::from_str(1, "x").unwrap();
+        assert_eq!(task.subject, "x");
+
+        let task = Task::from_str(1, "x 2024-05-01").unwrap();
+        assert_eq!(task.subject, "2024-05-01");
+
+        let task = Task::from_str(1, "(").unwrap();
+        assert_eq!(task.subject, "(");
     }
 }
