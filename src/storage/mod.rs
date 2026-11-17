@@ -1,7 +1,7 @@
 use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 use crate::{
-    error::{Result, ResultExt, TaskError},
+    error::{ResultExt, TaskError, TaskResult},
     tasks::{list::TaskList, task::Task},
 };
 
@@ -16,7 +16,7 @@ impl TaskStorage {
 }
 
 impl TaskStorage {
-    pub fn get_all(&self) -> Result<TaskList> {
+    pub fn get_all(&self) -> TaskResult<TaskList> {
         let content = std::fs::read_to_string(&self.todo_file)
             .context_transform(TaskError::TodoFileIo)
             .attach_with(|| format!("todo file: {}", self.todo_file.display()))?;
@@ -31,7 +31,7 @@ impl TaskStorage {
         Ok(tasks)
     }
 
-    pub fn persist(&self, tasks: TaskList) -> Result<()> {
+    pub fn persist(&self, tasks: TaskList) -> TaskResult<()> {
         let mut file = OpenOptions::new()
             .create(true)
             .truncate(true)

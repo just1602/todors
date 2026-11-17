@@ -1,10 +1,10 @@
 use crate::{
     cli::Edit,
     config::Config,
-    error::{AppError, EditorError, Result, ResultExt, bail},
+    error::{AppError, AppResult, EditorError, ResultExt, bail},
 };
 
-pub fn handle_edit(params: Edit, config: Config) -> Result<()> {
+pub fn handle_edit(params: Edit, config: Config) -> AppResult<()> {
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| "nvim".to_string());
     let mut cmd = std::process::Command::new(editor);
 

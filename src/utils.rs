@@ -1,12 +1,12 @@
 use crate::{
-    error::{AppError, OutputError, Result, ResultExt},
+    error::{AppError, AppResult, OutputError, ResultExt},
     tasks::list::TaskList,
 };
 use colored::Colorize;
 use std::io;
 use std::io::Write;
 
-pub fn print_tasks_list(tasks: &TaskList, total: usize) -> Result<()> {
+pub fn print_tasks_list(tasks: &TaskList, total: usize) -> AppResult<()> {
     let stdout = io::stdout();
     let mut handle = io::BufWriter::new(stdout);
 

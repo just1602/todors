@@ -1,14 +1,14 @@
 use crate::{
     cli::Modify,
-    error::Result,
+    error::{AppError, AppResult, ResultExt},
     storage::TaskStorage,
     tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
 // TODO: https://github.com/just1602/todors/issues/5
-pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<()> {
-    let mut tasks = storage.get_all()?;
-    let query = TaskQuery::from_string_vec(&params.query)?;
+pub fn handle_modify(params: Modify, storage: TaskStorage) -> AppResult<()> {
+    let mut tasks = storage.get_all().context_to::<AppError>()?;
+    let query = TaskQuery::from_string_vec(&params.query).context_to::<AppError>()?;
 
     let idx_to_modify: Vec<usize> = tasks
         .filter_from_query(&query)
@@ -47,5 +47,5 @@ pub fn handle_modify(params: Modify, storage: TaskStorage) -> Result<()> {
         });
     }
 
-    storage.persist(tasks)
+    storage.persist(tasks).context_to::<AppError>()
 }

@@ -1,4 +1,4 @@
-use crate::error::{Result as TaskResult, ResultExt, TaskError, bail};
+use crate::error::{Report, ResultExt, TaskError, TaskResult, bail};
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -42,7 +42,7 @@ fn parse_index_range(s: &str, start: usize, dash: usize, end: usize) -> TaskResu
 }
 
 impl FromStr for TaskQuery {
-    type Err = rootcause::Report;
+    type Err = Report<TaskError>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         #[derive(Clone, Copy, Debug, PartialEq)]
@@ -191,6 +191,7 @@ impl FromStr for TaskQuery {
 mod tests {
 
     use super::TaskQuery;
+    use crate::error::TaskError;
     use chrono::NaiveDate;
     use std::collections::HashMap;
 
@@ -299,6 +300,12 @@ mod tests {
     #[test]
     fn it_reports_an_invalid_index_range() {
         let err = "2-".parse::<TaskQuery>().unwrap_err();
+
+        assert!(matches!(
+            err.current_context(),
+            TaskError::ParseQuery { .. }
+        ));
+
         let message = format!("{err}");
 
         assert!(message.contains("failed to parse query"), "{message}");

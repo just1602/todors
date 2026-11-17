@@ -1,15 +1,18 @@
-use crate::cli::Done;
-use crate::error::Result;
-use crate::tasks::list::{TaskList, TaskListTrait};
+use crate::{
+    cli::Done,
+    error::{AppError, AppResult, ResultExt},
+    storage::TaskStorage,
+    tasks::{
+        list::{TaskList, TaskListTrait},
+        query::TaskQuery,
+    },
+    utils::print_tasks_list,
+};
 
-use crate::{storage::TaskStorage, tasks::query::TaskQuery};
-
-use crate::utils::print_tasks_list;
-
-pub fn handle_done(params: Done, storage: TaskStorage) -> Result<()> {
-    let mut tasks = storage.get_all()?;
+pub fn handle_done(params: Done, storage: TaskStorage) -> AppResult<()> {
+    let mut tasks = storage.get_all().context_to::<AppError>()?;
     let total = tasks.len();
-    let query = TaskQuery::from_string_vec(&params.query)?;
+    let query = TaskQuery::from_string_vec(&params.query).context_to::<AppError>()?;
 
     tasks
         .filter_mut_from_query(&query)
@@ -19,5 +22,5 @@ pub fn handle_done(params: Done, storage: TaskStorage) -> Result<()> {
 
     print_tasks_list(&completed_tasks, total)?;
 
-    storage.persist(tasks)
+    storage.persist(tasks).context_to::<AppError>()
 }

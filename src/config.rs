@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use crate::error::{AppError, ConfigError, EnvironmentError, OptionExt, Result, ResultExt};
+use crate::error::{AppError, AppResult, ConfigError, EnvironmentError, OptionExt, ResultExt};
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -10,7 +10,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_path(config_file_path: PathBuf) -> Result<Self> {
+    pub fn from_path(config_file_path: PathBuf) -> AppResult<Self> {
         let config_file_content = std::fs::read(&config_file_path)
             .context_transform(|err| AppError::from(ConfigError::Io(err)))
             .attach_with(|| format!("config file: {}", config_file_path.display()))?;
@@ -23,7 +23,7 @@ impl Config {
             .attach_with(|| format!("config file: {}", config_file_path.display()))?)
     }
 
-    pub fn todo_file(&self) -> Result<PathBuf> {
+    pub fn todo_file(&self) -> AppResult<PathBuf> {
         let base_path = if self.todo_dir.starts_with("~") {
             let home_path = std::env::var("HOME")
                 .ok()
@@ -44,6 +44,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::Config;
+    use crate::error::{AppError, ConfigError};
     use std::path::PathBuf;
 
     #[test]
@@ -81,6 +82,12 @@ mod tests {
             Ok(_) => panic!("invalid TOML should be rejected"),
             Err(err) => err,
         };
+
+        assert!(matches!(
+            err.current_context(),
+            AppError::Config(ConfigError::Toml(_))
+        ));
+
         let message = format!("{err}");
 
         assert!(message.contains("invalid TOML"), "{message}");

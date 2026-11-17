@@ -4,7 +4,7 @@ use clap::Parser;
 use todors::{
     cli::{Cli, Commands},
     config::Config,
-    error::{AppError, EnvironmentError, Result, bail},
+    error::{AppError, AppResult, EnvironmentError, bail},
     handlers::*,
     storage::TaskStorage,
 };
@@ -19,7 +19,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn run() -> Result<()> {
+fn run() -> AppResult<()> {
     let Cli {
         config_path,
         command,

@@ -1,13 +1,13 @@
 use crate::{
     cli::Remove,
-    error::Result,
+    error::{AppError, AppResult, ResultExt},
     storage::TaskStorage,
     tasks::{list::TaskListTrait, query::TaskQuery},
 };
 
-pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<()> {
-    let tasks = storage.get_all()?;
-    let query = TaskQuery::from_string_vec(&params.query)?;
+pub fn handle_remove(params: Remove, storage: TaskStorage) -> AppResult<()> {
+    let tasks = storage.get_all().context_to::<AppError>()?;
+    let query = TaskQuery::from_string_vec(&params.query).context_to::<AppError>()?;
 
     let idx_to_remove: Vec<usize> = tasks
         .filter_from_query(&query)
@@ -19,5 +19,5 @@ pub fn handle_remove(params: Remove, storage: TaskStorage) -> Result<()> {
         .filter(|task| !idx_to_remove.contains(&task.id))
         .collect();
 
-    storage.persist(tasks)
+    storage.persist(tasks).context_to::<AppError>()
 }
