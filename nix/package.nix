@@ -20,7 +20,10 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [ installShellFiles ];
 
   postInstall = ''
-    installShellCompletion --bash "dist/todors.bash" --zsh "dist/_todors" --fish "dist/todors.fish"
+    installShellCompletion --cmd todors \
+      --bash <($out/bin/todors completion bash) \
+      --zsh <($out/bin/todors completion zsh) \
+      --fish <($out/bin/todors completion fish)
   '';
 
   meta = {
