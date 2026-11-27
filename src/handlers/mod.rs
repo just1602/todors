@@ -1,5 +1,6 @@
 mod add;
 mod clean;
+mod completion;
 mod done;
 mod due;
 mod edit;
@@ -11,6 +12,7 @@ mod undone;
 
 pub use add::handle_add;
 pub use clean::handle_clean;
+pub use completion::handle_completion;
 pub use done::handle_done;
 pub use due::handle_due;
 pub use edit::handle_edit;

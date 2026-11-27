@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
+use clap_complete::Shell;
 
 #[derive(Parser)]
 #[command(
@@ -29,6 +30,7 @@ pub enum Commands {
     Clean(Clean),
     Modify(Modify),
     Next(Next),
+    Completion(Completion),
 }
 
 #[derive(Parser)]
@@ -147,4 +149,11 @@ pub struct Modify {
 pub struct Next {
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
     pub query: Option<Vec<String>>,
+}
+
+#[derive(Parser)]
+#[command(name = "completion", about = "Generate a shell completion script")]
+pub struct Completion {
+    #[arg(value_enum, help = "Shell to generate the completion script for")]
+    pub shell: Shell,
 }
