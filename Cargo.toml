@@ -17,3 +17,6 @@ colored = "3"
 rootcause = "0.13"
 tempfile = "3.27"
 thiserror = "2"
+
+[dev-dependencies]
+proptest = "1"
