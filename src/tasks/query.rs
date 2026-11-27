@@ -254,8 +254,12 @@ impl FromStr for TaskQuery {
 mod tests {
 
     use super::{super::task::Task, TaskQuery};
-    use crate::error::TaskError;
+    use crate::{
+        error::TaskError,
+        tasks::strategies::{arbitrary_text, safe_word, valid_task},
+    };
     use chrono::NaiveDate;
+    use proptest::prelude::*;
     use std::collections::HashMap;
 
     #[test]
@@ -411,5 +415,64 @@ mod tests {
         }
 
         assert!(!TaskQuery::from_string_vec(&[]).unwrap().matches(&task));
+    }
+
+    fn index_chunks() -> impl Strategy<Value = (String, Vec<usize>)> {
+        (1usize..15, any::<bool>()).prop_map(|(start, is_range)| {
+            if is_range {
+                let end = start + 1 + (start % 3);
+                (format!("{start}-{end}"), (start..=end).collect())
+            } else {
+                (start.to_string(), vec![start])
+            }
+        })
+    }
+
+    proptest! {
+        #[test]
+        fn arbitrary_query_text_never_panics(input in arbitrary_text(), task in valid_task()) {
+            let _ = TaskQuery::from_string_vec(&[input.clone()]);
+
+            if let Ok(query) = input.parse::<TaskQuery>() {
+                let _ = query.matches(&task);
+            }
+        }
+
+        #[test]
+        fn index_enumerations_and_ranges_parse_exactly(
+            chunks in prop::collection::vec(index_chunks(), 1..6)
+        ) {
+            let text = chunks
+                .iter()
+                .map(|(chunk, _)| chunk.as_str())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let expected: Vec<usize> = chunks
+                .into_iter()
+                .flat_map(|(_, indexes)| indexes)
+                .collect();
+
+            let result = text.parse::<TaskQuery>();
+            prop_assert!(result.is_ok(), "failed to parse generated query: {text}");
+
+            prop_assert_eq!(result.unwrap().indexes, expected);
+        }
+
+        #[test]
+        fn subject_query_matches_containing_tasks(word in safe_word(), other in safe_word()) {
+            let task = Task {
+                id: 3,
+                subject: format!("XYZ {word} XYZ"),
+                ..Task::default()
+            };
+
+            let query = word.parse::<TaskQuery>().unwrap();
+            prop_assert!(query.matches(&task));
+
+            if !word.contains(&other) {
+                let other_query = other.parse::<TaskQuery>().unwrap();
+                prop_assert!(!other_query.matches(&task));
+            }
+        }
     }
 }
