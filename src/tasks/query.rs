@@ -431,7 +431,7 @@ mod tests {
     proptest! {
         #[test]
         fn arbitrary_query_text_never_panics(input in arbitrary_text(), task in valid_task()) {
-            let _ = TaskQuery::from_string_vec(&[input.clone()]);
+            let _ = TaskQuery::from_string_vec(std::slice::from_ref(&input));
 
             if let Ok(query) = input.parse::<TaskQuery>() {
                 let _ = query.matches(&task);

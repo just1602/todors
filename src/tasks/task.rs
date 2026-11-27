@@ -441,7 +441,7 @@ mod tests {
             task,
             Task {
                 subject: "Some task to do".to_string(),
-                created_at: NaiveDate::from_ymd_opt(2024, 05, 01),
+                created_at: NaiveDate::from_ymd_opt(2024, 5, 1),
                 ..Task::default()
             }
         )
@@ -457,7 +457,7 @@ mod tests {
             Task {
                 subject: "Some task to do".to_string(),
                 priority: Some('A'),
-                created_at: NaiveDate::from_ymd_opt(2024, 05, 01),
+                created_at: NaiveDate::from_ymd_opt(2024, 5, 1),
                 ..Task::default()
             }
         )
@@ -472,7 +472,7 @@ mod tests {
             task,
             Task {
                 subject: "Some task to do".to_string(),
-                created_at: NaiveDate::from_ymd_opt(2024, 05, 01),
+                created_at: NaiveDate::from_ymd_opt(2024, 5, 1),
                 completed: true,
                 ..Task::default()
             }
@@ -488,8 +488,8 @@ mod tests {
             task,
             Task {
                 subject: "Some task to do".to_string(),
-                created_at: NaiveDate::from_ymd_opt(2024, 05, 01),
-                completed_at: NaiveDate::from_ymd_opt(2024, 06, 01),
+                created_at: NaiveDate::from_ymd_opt(2024, 5, 1),
+                completed_at: NaiveDate::from_ymd_opt(2024, 6, 1),
                 completed: true,
                 ..Task::default()
             }
@@ -768,21 +768,15 @@ mod tests {
     proptest! {
         #[test]
         fn arbitrary_text_never_panics(input in arbitrary_text()) {
-            match Task::from_str(7, &input) {
-                Ok(task) => {
-                    prop_assert_eq!(task.id, 7);
-                    prop_assert!(!task.subject.is_empty());
-                }
-                Err(_) => {}
+            if let Ok(task) = Task::from_str(7, &input) {
+                prop_assert_eq!(task.id, 7);
+                prop_assert!(!task.subject.is_empty());
             }
         }
 
         #[test]
         fn arbitrary_lines_never_panics(line in arbitrary_line()) {
-            match Task::from_str(7, &line) {
-                Ok(task) => prop_assert!(!task.subject.is_empty()),
-                Err(_) => {}
-            }
+            if let Ok(task) = Task::from_str(7, &line) { prop_assert!(!task.subject.is_empty()) }
         }
 
         #[test]
