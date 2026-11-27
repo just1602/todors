@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc fdc54bf30e637cb45ebd06fa4417b99d822be5660b31e65c5b7aba559de4512f # shrinks to task = Task { id: 1, subject: "task a #a", priority: None, created_at: None, completed_at: None, completed: false, due_date: None, contexts: [], projects: [], hashtags: ["a"], tags: {"a": "a"} }
+cc e69c751db5fb5bc7c245b05e68c39c01c6aaf40a09a73e25c7b6fa1d0f0084b6 # shrinks to task = Task { id: 1, subject: "task a #a", priority: Some('A'), created_at: None, completed_at: None, completed: false, due_date: None, contexts: [], projects: [], hashtags: ["a"], tags: {} }

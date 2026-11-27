@@ -257,7 +257,10 @@ impl Task {
 
             if new_state == State::Init {
                 match state {
-                    State::TagBegin(j) | State::Project(j) | State::Context(j) => {
+                    State::TagBegin(j)
+                    | State::Project(j)
+                    | State::Context(j)
+                    | State::HashTag(j) => {
                         append_task_slice(&mut subject, buf, j, char_end, id)?;
                     }
                     State::Init => subject.push(c),
@@ -408,7 +411,11 @@ impl Task {
 #[cfg(test)]
 mod tests {
     use super::{HashMap, Local, NaiveDate, Task};
-    use crate::error::TaskError;
+    use crate::{
+        error::TaskError,
+        tasks::strategies::{arbitrary_line, arbitrary_text, valid_task},
+    };
+    use proptest::prelude::*;
 
     #[test]
     fn it_parses_task() {
@@ -739,6 +746,14 @@ mod tests {
     }
 
     #[test]
+    fn it_keeps_a_hashtag_in_the_subject_when_followed_by_another_token() {
+        let task = Task::from_str(1, "task #next due:2024-06-01").unwrap();
+
+        assert_eq!(task.subject, "task #next");
+        assert_eq!(task.hashtags, vec!["next".to_string()]);
+    }
+
+    #[test]
     fn it_handles_short_malformed_prefixes_without_panicking() {
         let task = Task::from_str(1, "x").unwrap();
         assert_eq!(task.subject, "x");
@@ -748,5 +763,65 @@ mod tests {
 
         let task = Task::from_str(1, "(").unwrap();
         assert_eq!(task.subject, "(");
+    }
+
+    proptest! {
+        #[test]
+        fn arbitrary_text_never_panics(input in arbitrary_text()) {
+            match Task::from_str(7, &input) {
+                Ok(task) => {
+                    prop_assert_eq!(task.id, 7);
+                    prop_assert!(!task.subject.is_empty());
+                }
+                Err(_) => {}
+            }
+        }
+
+        #[test]
+        fn arbitrary_lines_never_panics(line in arbitrary_line()) {
+            match Task::from_str(7, &line) {
+                Ok(task) => prop_assert!(!task.subject.is_empty()),
+                Err(_) => {}
+            }
+        }
+
+        #[test]
+        fn canonical_task_round_trips_through_display_and_parse(task in valid_task()) {
+            let line = task.to_string();
+            let result = Task::from_str(1, &line);
+            prop_assert!(result.is_ok(), "failed to parse generated line: {line}");
+            let parsed = result.unwrap();
+
+            prop_assert_eq!(parsed.subject, task.subject);
+            prop_assert_eq!(parsed.priority, task.priority);
+            prop_assert_eq!(parsed.created_at, task.created_at);
+            prop_assert_eq!(parsed.due_date, task.due_date);
+            prop_assert_eq!(parsed.contexts, task.contexts);
+            prop_assert_eq!(parsed.projects, task.projects);
+            prop_assert_eq!(parsed.hashtags, task.hashtags);
+            prop_assert_eq!(parsed.tags, task.tags);
+        }
+
+        #[test]
+        fn completion_and_undo_restore_the_original_priority(task in valid_task()) {
+            let original_priority = task.priority;
+            let original_subject = task.subject.clone();
+            let mut task = task;
+
+            task.complete();
+            prop_assert!(task.completed);
+
+            let line = task.to_string();
+            let result = Task::from_str(1, &line);
+            prop_assert!(result.is_ok(), "failed to parse completed task: {line}");
+            let mut parsed = result.unwrap();
+
+            parsed.undo();
+
+            prop_assert_eq!(parsed.subject, original_subject);
+            prop_assert_eq!(parsed.priority, original_priority);
+            prop_assert!(!parsed.completed);
+            prop_assert!(!parsed.tags.contains_key("pri"));
+        }
     }
 }
