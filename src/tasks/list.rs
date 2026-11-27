@@ -17,7 +17,8 @@ impl TaskListTrait for TaskList {
 #[cfg(test)]
 mod tests {
     use super::{TaskList, TaskListTrait};
-    use crate::tasks::task::Task;
+    use crate::tasks::{strategies::urgency_task, task::Task};
+    use proptest::prelude::*;
 
     fn task(id: usize, priority: Option<char>) -> Task {
         Task {
@@ -48,5 +49,28 @@ mod tests {
         tasks.sort_by_urgency();
 
         assert_eq!(ids(&tasks), vec![1, 2, 3]);
+    }
+
+    proptest! {
+        #[test]
+        fn urgency_sort_is_stable_and_ordered(
+            generated in prop::collection::vec(urgency_task(), 0..25)
+        ) {
+            let original: Vec<(usize, i32)> = generated
+                .iter()
+                .map(|task| (task.id, task.compute_urgency()))
+                .collect();
+            let mut expected = original.clone();
+            expected.sort_by_key(|&(_, urgency)| std::cmp::Reverse(urgency));
+
+            let mut tasks = generated;
+            tasks.sort_by_urgency();
+            let actual: Vec<(usize, i32)> = tasks
+                .iter()
+                .map(|task| (task.id, task.compute_urgency()))
+                .collect();
+
+            prop_assert_eq!(actual, expected);
+        }
     }
 }
