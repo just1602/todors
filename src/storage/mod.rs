@@ -70,7 +70,14 @@ impl TaskStorage {
 #[cfg(test)]
 mod tests {
     use super::TaskStorage;
-    use crate::{error::TaskError, tasks::task::Task};
+    use crate::{
+        error::TaskError,
+        tasks::{
+            strategies::{TaskSnapshot, arbitrary_line, valid_task},
+            task::Task,
+        },
+    };
+    use proptest::prelude::*;
     use std::fs;
     use tempfile::NamedTempFile;
 
@@ -103,5 +110,54 @@ mod tests {
 
         let content = fs::read_to_string(todo_file.path()).unwrap();
         assert_eq!(content, "(A) a task\n");
+    }
+
+    proptest! {
+        #[test]
+        fn persisted_tasks_round_trip(tasks in prop::collection::vec(valid_task(), 1..8)) {
+            let todo_file = NamedTempFile::new().unwrap();
+            let storage = TaskStorage::new(todo_file.path().to_path_buf());
+            let expected: Vec<TaskSnapshot> = tasks.iter().map(TaskSnapshot::from_task).collect();
+
+            storage.persist(tasks).unwrap();
+            let reloaded = storage.get_all().unwrap();
+            let actual: Vec<TaskSnapshot> = reloaded.iter().map(TaskSnapshot::from_task).collect();
+
+            prop_assert_eq!(actual, expected);
+            prop_assert!(reloaded
+                .iter()
+                .enumerate()
+                .all(|(index, task)| task.id == index + 1));
+        }
+
+        #[test]
+        fn get_all_reports_each_rejected_line(
+            lines in prop::collection::vec(arbitrary_line(), 1..12)
+        ) {
+            let content = lines.join("\n");
+            let expected_count = content
+                .lines()
+                .filter(|line| Task::from_str(1, line).is_err())
+                .count();
+
+            let todo_file = NamedTempFile::new().unwrap();
+            fs::write(todo_file.path(), &content).unwrap();
+
+            let result = TaskStorage::new(todo_file.path().to_path_buf()).get_all();
+
+            if expected_count == 0 {
+                prop_assert!(result.is_ok());
+            } else {
+                let err = result.unwrap_err();
+                let reports_expected_count = matches!(
+                    err.current_context(),
+                    TaskError::Multiple { count } if *count == expected_count
+                );
+                prop_assert!(
+                    reports_expected_count,
+                    "expected {expected_count} rejected lines"
+                );
+            }
+        }
     }
 }
